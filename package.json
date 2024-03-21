@@ -1,0 +1,17 @@
+{
+    "main": "dist/index",
+    "types": "dist/index",
+    "dependencies": {
+        "@types/body-parser": "^1.19.5",
+        "body-parser": "^1.20.2",
+        "dotenv": "^16.4.5",
+        "node-telegram-bot-api": "^0.64.0",
+        "openai": "^4.29.2",
+        "telegram-typings": "^5.0.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.11.30",
+        "@types/node-telegram-bot-api": "^0.61.11",
+        "ts-node": "^10.9.2"
+    }
+}
