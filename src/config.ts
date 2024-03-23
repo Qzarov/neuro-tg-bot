@@ -5,17 +5,23 @@ dotenv.config()
 interface ENV {
   NODE_ENV:   string | undefined;
   BOT_TOKEN:  string | undefined;
+
+  GPT_API_SECRET: string | undefined;
 }
 
 interface Config {
   NODE_ENV:   string;
   BOT_TOKEN:  string;
+
+  GPT_API_SECRET: string;
 }
 
 const getConfig = (): ENV => {
   return {
     NODE_ENV: process.env.NODE_ENV,
     BOT_TOKEN: process.env.BOT_TOKEN ? String(process.env.BOT_TOKEN) : undefined,
+
+    GPT_API_SECRET: process.env.GPT_API_SECRET ? String(process.env.GPT_API_SECRET) : undefined,
   };
 };
 

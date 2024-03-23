@@ -1,7 +1,6 @@
-import TelegramBot, { InlineKeyboardMarkup } from "node-telegram-bot-api";
-import config from "../config.js";
+import TelegramBot, { InlineKeyboardMarkup, ReplyKeyboardMarkup } from "node-telegram-bot-api";
 
-
+export default
 class TgBot {
     public bot: TelegramBot 
     constructor(bot_token: string) {
@@ -9,7 +8,7 @@ class TgBot {
         this.bot = new TelegramBot(token, { polling: true });
     }
 
-    async sendMessage(userId: number, replyText: string, keyboard?: InlineKeyboardMarkup) {
+    async sendMessage(userId: number, replyText: string, keyboard?: InlineKeyboardMarkup | ReplyKeyboardMarkup) {
         this.bot.sendMessage(
             userId, 
             replyText,
@@ -20,5 +19,3 @@ class TgBot {
         )
     }
 }
-
-export const tgBot = new TgBot(config.BOT_TOKEN)

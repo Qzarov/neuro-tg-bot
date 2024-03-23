@@ -1,12 +1,14 @@
 import TelegramBot, { InlineKeyboardMarkup, Message } from "node-telegram-bot-api";
-// import { OpenAIApi, Configuration } from "openai";
 
-import { tgBot } from "./telegram/tgBot";
-import { messageReceived } from "./telegram/eventHandlers";
+import TgBot from "./lib/telegram/tgBot";
+import EventsHandler from "./handlers/events";
+import config from "./config"
 
 
+const tgBot = new TgBot(config.BOT_TOKEN)
+const eventsHandler = new EventsHandler(tgBot)
 console.log(`Neuro bot start polling`)
 
 tgBot.bot.on("message", async (message: Message) => {
-    await messageReceived(message)
+    await eventsHandler.messageReceived(message)
 });
