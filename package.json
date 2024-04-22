@@ -3,10 +3,12 @@
     "types": "dist/index",
     "dependencies": {
         "@types/body-parser": "^1.19.5",
+        "axios": "^1.6.8",
         "body-parser": "^1.20.2",
         "dotenv": "^16.4.5",
         "node-telegram-bot-api": "^0.64.0",
         "openai": "^4.29.2",
+        "querystring": "^0.2.1",
         "telegram-typings": "^5.0.0"
     },
     "devDependencies": {

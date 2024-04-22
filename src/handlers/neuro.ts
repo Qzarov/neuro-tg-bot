@@ -1,5 +1,7 @@
 import config from "../config";
 import GPT, { GptResponse } from "../lib/gpt";
+import TextHandler from "../lib/text/text";
+import { Langs, Translation } from "../lib/text/types/lang";
 
 
 export enum AvailableNeuros {
@@ -11,7 +13,15 @@ export enum AvailableNeuros {
 export default class NeuroManager {
     constructor() {}
 
-    public async request(neuro: AvailableNeuros, request: string) {
+    public async request(neuro: AvailableNeuros, request: string): Promise<string> {
+        
+        const req = new TextHandler(request)
+        const detected: Translation = await req.detectedLang()
+
+        if (detected.lang !== Langs.en) {
+            request = (await req.translate(Langs.en)).text
+        }
+
         let result: string = ""
 
         switch(neuro) {
@@ -27,7 +37,9 @@ export default class NeuroManager {
 
         }
 
-        return result
+        const res = new TextHandler(result)
+
+        return (await res.translate(Langs.ru)).text
     }
 
     private messageFromGptResponse(response: GptResponse): string {
