@@ -6,6 +6,7 @@ import usersState, { UserState } from "./usersState";
 import TgBot from "../lib/telegram/tgBot";
 import NeuroManager, { AvailableNeuros } from "./neuro";
 import { replyButtons } from "../lib/telegram/const/buttons";
+import User from "../models/user";
 
 
 export default class EventsHandler {
@@ -24,8 +25,13 @@ export default class EventsHandler {
         const userId: number = from.id
         const text: string | undefined = message.text;
     
+        const user: User = new User(userId, from.username, from.first_name, from.last_name)
+        if (!(await user.isInDatabase())) {
+            await user.save()
+        } 
+
         if (typeof text !== "string") {
-            throw error(`⛔️  Error! Type of message's text is ${typeof text}`)
+            throw error(`⛔️  Error! Type of message's text is ${typeof text}:`, text)
         }
     
         if (usersState.isUsingNeuro(from.id)) {

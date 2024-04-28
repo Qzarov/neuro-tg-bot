@@ -3,7 +3,10 @@ import TelegramBot, { InlineKeyboardMarkup, Message } from "node-telegram-bot-ap
 import TgBot from "./lib/telegram/tgBot";
 import EventsHandler from "./handlers/events";
 import config from "./config"
+import { connectToMongo } from "./services/mongo.service";
 
+
+connectToMongo()
 
 const tgBot = new TgBot(config.BOT_TOKEN)
 const eventsHandler = new EventsHandler(tgBot)

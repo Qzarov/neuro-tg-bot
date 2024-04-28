@@ -22,7 +22,10 @@ class UsersStateHandler {
 
     public isUsingNeuro(userId: number): boolean {
         const userState = this.getCurrentState(userId)
-        return [UserState.usingGPT, UserState.usingGemini].includes(userState)
+        return [
+            UserState.usingGPT, 
+            UserState.usingGemini
+        ].includes(userState)
     }
 }
 
