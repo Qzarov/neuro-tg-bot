@@ -1,11 +1,15 @@
-import TelegramBot, { InlineKeyboardMarkup, Message, ReplyKeyboardMarkup } from "node-telegram-bot-api";
+import TelegramBot, { ReplyKeyboardMarkup } from "node-telegram-bot-api";
 
 import { replyButtons } from "../lib/telegram/const/buttons";
-import usersState, { UserState } from "./usersState";
 import TgBot from "../lib/telegram/tgBot";
+import User, { UserState } from "../models/user";
+
 
 export const Commands = {
     start: "/start",
+    admin: "/admin",
+    state: "/state",
+    exitAdminMode: "/exitAdmin",
     chooseNeuro: "Выбрать таролога",
     useGPT: "Расклад от GPT",
     useGemini: "Расклад от Gemini",
@@ -19,7 +23,19 @@ export default class CommandsHandler {
     public async handleCommand(from: TelegramBot.User, command: string) {
         switch(command) {
             case Commands.start:
-                this.handleStart(from)
+                await this.handleStart(from)
+                break;
+
+            case Commands.admin:
+                await this.handleAdmin(from)
+                break;
+
+            case Commands.exitAdminMode:
+                await this.handleExitAdminMode(from);
+                break;
+
+            case Commands.state:
+                await this.handleState(from);
                 break;
 
             case Commands.chooseNeuro:
@@ -41,6 +57,36 @@ export default class CommandsHandler {
             default:
                 await this.handleUnknownCommand(from)
         }
+    }
+
+    public async handleAdmin(from: TelegramBot.User) {
+        let replyText: string = "Welcome to the Crypto Tarot!"
+        const user: User = new User(from.id);
+        if (await user.hasAdminRights()) {
+            user.updateState(UserState.inAdminMode);
+            replyText = "Now you are in Admin Mode";
+        } else {
+            replyText =  "⛔️  Сорри, но ты не администратор"
+        }
+        await this.bot.sendMessage(Number(from.id), replyText)
+    }
+
+    public async handleExitAdminMode(from: TelegramBot.User) {
+        const user: User = new User(from.id);
+        let replyText = `Текущий статус: ${UserState[await user.getState()]}`
+
+        if (await user.getState() === UserState.inAdminMode) {
+            await user.updateState(UserState.start);
+            replyText = `Вы вышли из режима администратора. ` + replyText; 
+        }
+        await this.bot.sendMessage(Number(from.id), replyText)
+    }
+
+    public async handleState(from: TelegramBot.User) {
+        const user: User = new User(from.id);
+        const state = await user.getState()
+        const replyText = `Твой текущий статус: ${UserState[state]}`
+        await this.bot.sendMessage(Number(from.id), replyText)
     }
 
     public async handleStart(from: TelegramBot.User) {
@@ -74,7 +120,8 @@ export default class CommandsHandler {
     }
 
     public async handleSetUseGpt(userId: number) {
-        usersState.updateUserState(userId, UserState.usingGPT)
+        const user: User = new User(userId)
+        user.updateState(UserState.usingGPT)
 
         const keyboard: ReplyKeyboardMarkup = {
             keyboard: [
@@ -102,9 +149,19 @@ export default class CommandsHandler {
     }
 
     public async handleEndUsingNeuro(userId: number) {
-        usersState.updateUserState(userId, UserState.start)
+        const user: User = new User(userId)
+        user.updateState(UserState.start)
         let replyText: string = "Надеюсь, что это было полезно. Убираю карты 🃏🃏🃏"
-        await this.bot.sendMessage(Number(userId), replyText)
+        const keyboard: ReplyKeyboardMarkup = {
+            keyboard: [
+                [
+                    replyButtons.chooseNeuralNetwork
+                ],
+            ],
+            resize_keyboard: true,
+            one_time_keyboard: true,
+        }
+        await this.bot.sendMessage(Number(userId), replyText, keyboard)
     }
     
     public async handleUnknownCommand(from: TelegramBot.User) {
