@@ -1,11 +1,13 @@
 import { error } from "console";
-import TelegramBot, { Message } from "node-telegram-bot-api";
+import TelegramBot, { User as TgUser, Message, CallbackQuery, InlineKeyboardMarkup } from "node-telegram-bot-api";
 
 import CommandsHandler, { Commands } from "./commands";
 import TgBot from "../lib/telegram/tgBot";
 import NeuroManager, { AvailableNeuros } from "./neuro";
-import { replyButtons } from "../lib/telegram/const/buttons";
+import { replyKeyboardButtons } from "../lib/telegram/const/buttons";
 import User, { UserState } from "../models/user";
+import TextHandler from "../lib/text/text";
+import { Langs } from '../lib/text/types/lang';
 
 
 export default class EventsHandler {
@@ -62,18 +64,25 @@ export default class EventsHandler {
                 //     break;
             }
 
-            this.bot.sendMessage(from.id, response)
+            const keyboard: InlineKeyboardMarkup = {
+                inline_keyboard: [
+                    [
+                        {text: 'Перевести', callback_data: `translate`},
+                    ]
+                ]
+            }
+
+            this.bot.sendMessage(from.id, response, keyboard)
             
             if (errorOccured) {
                 await this.commandsHandler.handleEndUsingNeuro(userId)
             } else {
-                const postScriptum = `Надеюсь, что карты ответили на твой вопрос. Ты можешь отправить следующий или завершить расклад, нажав на кнопку "${replyButtons.endUsingNeuro.text}"`
+                const postScriptum = `Надеюсь, что карты ответили на твой вопрос. Ты можешь отправить следующий или завершить расклад, нажав на кнопку "${replyKeyboardButtons.endUsingNeuro.text}"`
                 this.bot.sendMessage(from.id, postScriptum)
             }
             return
         }
     
-        
         try {
             await this.commandsHandler.handleCommand(from, text)
         } catch (err) {
@@ -81,5 +90,25 @@ export default class EventsHandler {
         }
     
         //textMessagesHanler.handleMessage(userId, text)
+    }
+
+    async callbackReceived(callbackData: CallbackQuery) {
+
+        let msg: Message | undefined = typeof callbackData.message !== 'undefined' ? callbackData.message : undefined
+        
+        if (typeof msg === 'undefined') {
+            console.log(`⛔️  Message is undefined in callback_query`)
+            // TODO handle error
+            return
+        }
+
+        // TODO delegate to callbackHandler
+        if (callbackData.data === "translate") {
+            if (msg.text) {
+                const text: TextHandler = new TextHandler(msg.text);
+                this.bot.sendMessage(callbackData.from.id, (await text.translate(Langs.ru)).text)
+            }
+
+        }
     }
 }

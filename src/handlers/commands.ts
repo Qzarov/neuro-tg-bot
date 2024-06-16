@@ -1,6 +1,6 @@
 import TelegramBot, { ReplyKeyboardMarkup } from "node-telegram-bot-api";
 
-import { replyButtons } from "../lib/telegram/const/buttons";
+import { replyKeyboardButtons } from "../lib/telegram/const/buttons";
 import TgBot from "../lib/telegram/tgBot";
 import User, { UserState } from "../models/user";
 
@@ -95,7 +95,7 @@ export default class CommandsHandler {
         const keyboard: ReplyKeyboardMarkup = {
             keyboard: [
                 [
-                    replyButtons.chooseNeuralNetwork
+                    replyKeyboardButtons.chooseNeuralNetwork
                 ],
             ],
             resize_keyboard: true,
@@ -111,8 +111,8 @@ export default class CommandsHandler {
         const keyboard: ReplyKeyboardMarkup = {
             keyboard: [
             [
-                replyButtons.useGPT,
-                replyButtons.useGemini,
+                replyKeyboardButtons.useGPT,
+                replyKeyboardButtons.useGemini,
             ]
         ]}
 
@@ -126,7 +126,7 @@ export default class CommandsHandler {
         const keyboard: ReplyKeyboardMarkup = {
             keyboard: [
             [
-                replyButtons.endUsingNeuro,
+                replyKeyboardButtons.endUsingNeuro,
             ]
         ]}
 
@@ -140,7 +140,7 @@ export default class CommandsHandler {
         // const keyboard: ReplyKeyboardMarkup = {
         //     keyboard: [
         //     [
-        //         replyButtons.endUsingNeuro,
+        //         replyKeyboardButtons.endUsingNeuro,
         //     ]
         // ]}
 
@@ -155,7 +155,7 @@ export default class CommandsHandler {
         const keyboard: ReplyKeyboardMarkup = {
             keyboard: [
                 [
-                    replyButtons.chooseNeuralNetwork
+                    replyKeyboardButtons.chooseNeuralNetwork
                 ],
             ],
             resize_keyboard: true,

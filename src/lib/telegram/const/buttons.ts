@@ -1,7 +1,7 @@
 import { InlineKeyboardButton, KeyboardButton } from "node-telegram-bot-api"
 
 
-export const replyButtons: { [key: string]: KeyboardButton } = {
+export const replyKeyboardButtons: { [key: string]: KeyboardButton } = {
     chooseNeuralNetwork: {
         text: "Выбрать таролога"
     },

@@ -15,3 +15,7 @@ console.log(`Neuro bot start polling`)
 tgBot.bot.on("message", async (message: Message) => {
     await eventsHandler.messageReceived(message)
 });
+
+tgBot.bot.on("callback_query", async (callbackQuery) => {
+    await eventsHandler.callbackReceived(callbackQuery)
+});
