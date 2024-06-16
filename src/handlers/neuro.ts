@@ -39,7 +39,8 @@ export default class NeuroManager {
 
         const res = new TextHandler(result)
 
-        return (await res.translate(Langs.ru)).text
+        // return (await res.translate(Langs.ru)).text
+        return res.sourceText()
     }
 
     private messageFromGptResponse(response: GptResponse): string {

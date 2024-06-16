@@ -13,7 +13,7 @@ class TgBot {
             userId, 
             replyText,
             {
-                parse_mode: `Markdown`,
+                //parse_mode: `Markdown`,
                 reply_markup: keyboard,
             }
         )
