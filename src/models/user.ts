@@ -6,39 +6,35 @@ export enum UserState {
     start,
     usingGPT,
     usingGemini,
-    inAdminMode,
+    adminMode,
+}
+
+export interface UserData {
+    tgId: number;
+    username?: string;
+    firstName?: string;
+    lastName?: string;
+    state?: UserState;
+    id?: ObjectId;
+    isAdmin?: boolean;
+    hasAccess?: boolean;
+    tokensUsed?: number;
+    tokensAvailable?: number;
 }
 
 export default class User {
-    constructor(
-        public tgId: number,
-        public username?: string,
-        public firstName?: string,
-        public lastName?: string,
-        public state?: UserState,
-        public id?: ObjectId,
-        public isAdmin: boolean = false,
-        public hasAccess: boolean = false,
-    ) {}
+    
+    constructor(private _userData: UserData) {}
 
     async save() {
-        const user = {
-            tgId: this.tgId,
-            username: this.username,
-            firstName: this.firstName,
-            lastName: this.lastName,
-            state: this.state,
-            isAdmin: this.isAdmin,
-            hasAccess: this.hasAccess,
-        }
-        const result = await collections.users?.insertOne(user);
+        const result = await collections.users?.insertOne(this._userData);
         console.log(`saving result:`, result)
     }
 
     async isInDatabase(): Promise<boolean> {
         const user = await this.getDbRecord();
         if (user?._id) {
-            this.id = user._id
+            this._userData.id = user._id
         }
         return user ? true : false
     }
@@ -56,7 +52,7 @@ export default class User {
 
     async updateState(newState: UserState) {
         const res = await collections.users?.updateOne(
-            { tgId: this.tgId }, 
+            { tgId: this._userData.tgId }, 
             {$set: {state: newState}}
         );
         console.log(`updateState result set state`, newState)
@@ -77,7 +73,7 @@ export default class User {
     }
 
     private async getDbRecord() {
-        const user = await collections.users?.findOne({ tgId: this.tgId });
+        const user = await collections.users?.findOne({ tgId: this._userData.tgId });
         return user
     }
 }

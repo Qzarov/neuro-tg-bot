@@ -26,7 +26,13 @@ export default class EventsHandler {
         const userId: number = from.id
         const text: string | undefined = message.text;
     
-        const user: User = new User(userId, from.username, from.first_name, from.last_name)
+        const user: User = new User({
+            tgId: userId, 
+            username: from.username, 
+            firstName: from.first_name, 
+            lastName: from.last_name,
+        });
+
         if (!(await user.isInDatabase())) {
             await user.save()
         } 

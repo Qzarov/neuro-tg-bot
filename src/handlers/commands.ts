@@ -7,7 +7,10 @@ import User, { UserState } from "../models/user";
 
 export const Commands = {
     start: "/start",
+    user: "/user",
     admin: "/admin",
+    grantAccess: "/grantAccess",
+    makeAdmin: "/makeAdmin",
     state: "/state",
     exitAdminMode: "/exitAdmin",
     chooseNeuro: "Выбрать таролога",
@@ -21,13 +24,25 @@ export default class CommandsHandler {
     constructor(private bot: TgBot) {}
 
     public async handleCommand(from: TelegramBot.User, command: string) {
-        switch(command) {
+        const commandAndParams: string[] = command.split(' ');
+        const commandWithoutParams: string | undefined = commandAndParams.shift();
+        const params = commandAndParams.join(' ');
+
+        console.log(`commandAndParams:`, commandAndParams);
+        console.log(`commandWithoutParams:`, commandWithoutParams);
+        console.log(`params:`, params);
+
+        switch(commandWithoutParams) {
             case Commands.start:
                 await this.handleStart(from)
                 break;
 
             case Commands.admin:
                 await this.handleAdmin(from)
+                break;
+
+            case Commands.admin:
+                await this.handleGrantAccess(from, params)
                 break;
 
             case Commands.exitAdminMode:
@@ -61,21 +76,31 @@ export default class CommandsHandler {
 
     public async handleAdmin(from: TelegramBot.User) {
         let replyText: string = "Welcome to the Crypto Tarot!"
-        const user: User = new User(from.id);
+        const user: User = new User({ tgId: from.id });
         if (await user.hasAdminRights()) {
-            user.updateState(UserState.inAdminMode);
-            replyText = "Now you are in Admin Mode";
+            user.updateState(UserState.adminMode);
+            replyText = 
+                "Теперь ты в режиме администратора. Доступные команды:\n" + 
+                "/grantAccess username - выдать пользователю @username доступ к боту\n" +
+                "/makeAdmin username - сделать пользователя @username администратором";
         } else {
             replyText =  "⛔️  Сорри, но ты не администратор"
         }
         await this.bot.sendMessage(Number(from.id), replyText)
     }
 
+    public async handleGrantAccess(from: TelegramBot.User, grantToUsername: string) {
+        
+        
+        const replyText: string = "⛔️  Неизвестная команда"
+        await this.bot.sendMessage(Number(from.id), replyText)
+    }
+
     public async handleExitAdminMode(from: TelegramBot.User) {
-        const user: User = new User(from.id);
+        const user: User = new User({ tgId: from.id });
         let replyText = `Текущий статус: ${UserState[await user.getState()]}`
 
-        if (await user.getState() === UserState.inAdminMode) {
+        if (await user.getState() === UserState.adminMode) {
             await user.updateState(UserState.start);
             replyText = `Вы вышли из режима администратора. ` + replyText; 
         }
@@ -83,7 +108,7 @@ export default class CommandsHandler {
     }
 
     public async handleState(from: TelegramBot.User) {
-        const user: User = new User(from.id);
+        const user: User = new User({ tgId: from.id });
         const state = await user.getState()
         const replyText = `Твой текущий статус: ${UserState[state]}`
         await this.bot.sendMessage(Number(from.id), replyText)
@@ -120,7 +145,7 @@ export default class CommandsHandler {
     }
 
     public async handleSetUseGpt(userId: number) {
-        const user: User = new User(userId)
+        const user: User = new User({ tgId: userId })
         user.updateState(UserState.usingGPT)
 
         const keyboard: ReplyKeyboardMarkup = {
@@ -149,7 +174,7 @@ export default class CommandsHandler {
     }
 
     public async handleEndUsingNeuro(userId: number) {
-        const user: User = new User(userId)
+        const user: User = new User({ tgId: userId})
         user.updateState(UserState.start)
         let replyText: string = "Надеюсь, что это было полезно. Убираю карты 🃏🃏🃏"
         const keyboard: ReplyKeyboardMarkup = {
