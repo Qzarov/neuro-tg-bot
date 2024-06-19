@@ -1,4 +1,4 @@
-import { ObjectId } from "mongodb";
+import { ObjectId, WithId } from "mongodb";
 import { collections } from "../services/mongo.service";
 
 
@@ -9,9 +9,7 @@ export enum UserState {
     adminMode,
 }
 
-export interface UserData {
-    tgId: number;
-    username?: string;
+export interface BaseUserData {
     firstName?: string;
     lastName?: string;
     state?: UserState;
@@ -21,6 +19,19 @@ export interface UserData {
     tokensUsed?: number;
     tokensAvailable?: number;
 }
+
+export interface UserDataWithTgId extends BaseUserData {
+    tgId: number;
+    username?: string;
+}
+
+export interface UserDataWithUsername extends BaseUserData {
+    tgId?: number;
+    username: string;
+}
+
+export type UserData = UserDataWithUsername | UserDataWithTgId;
+
 
 export default class User {
     
@@ -33,17 +44,20 @@ export default class User {
 
     async isInDatabase(): Promise<boolean> {
         const user = await this.getDbRecord();
-        if (user?._id) {
-            this._userData.id = user._id
-        }
+        console.log(`get user from db:`, user)
+        
+        // if (user?._id) {
+        //     this._userData = user
+        // }
         return user ? true : false
     }
 
     async hasAdminRights(): Promise<boolean> {
         const user = await this.getDbRecord();
-        console.log(`getIsAdmin for user:`, user)
         return user?.isAdmin ? true : false
     }
+
+    async grantAccess(){}
 
     async hasAccessToBot(): Promise<boolean> {
         const user = await this.getDbRecord();
@@ -68,12 +82,37 @@ export default class User {
 
     async getState(): Promise<UserState> {
         const user = await this.getDbRecord()
-        console.log(`getState for user:`, user)
         return user?.state
     }
 
+    /**
+     * Use this function instead of getDbRecord()
+     * @returns Promise<UserData>
+     */
+    async getUserDataFromDb(): Promise<UserData> {
+        const rawUser = await this.getDbRecord()
+
+        const userData: UserData = {
+            tgId: rawUser?.tgId,
+            username: rawUser?.username,
+            firstName: rawUser?.firstName,
+            lastName: rawUser?.lastName,
+            state: rawUser?.state,
+            id: rawUser?._id,
+            isAdmin: rawUser?.isAdmin,
+            hasAccess: rawUser?.hasAccess,
+            tokensUsed: rawUser?.tokensUsed,
+            tokensAvailable: rawUser?.tokensAvailable,
+        }
+
+        return userData
+    }
+
     private async getDbRecord() {
-        const user = await collections.users?.findOne({ tgId: this._userData.tgId });
+        const user = await collections.users?.findOne({ 
+            tgId: this._userData.tgId, 
+            username: this._userData.username, 
+        });
         return user
     }
 }

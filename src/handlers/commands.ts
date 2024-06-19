@@ -10,7 +10,9 @@ export const Commands = {
     user: "/user",
     admin: "/admin",
     grantAccess: "/grantAccess",
+    revokeAccess: "/revokeAccess",
     makeAdmin: "/makeAdmin",
+    revokeAdmin: "/revokeAdmin",
     state: "/state",
     exitAdminMode: "/exitAdmin",
     chooseNeuro: "Выбрать таролога",
@@ -41,8 +43,12 @@ export default class CommandsHandler {
                 await this.handleAdmin(from)
                 break;
 
-            case Commands.admin:
+            case Commands.grantAccess:
                 await this.handleGrantAccess(from, params)
+                break;
+
+            case Commands.makeAdmin:
+                await this.handleMakeAdmin(from, params)
                 break;
 
             case Commands.exitAdminMode:
@@ -82,17 +88,36 @@ export default class CommandsHandler {
             replyText = 
                 "Теперь ты в режиме администратора. Доступные команды:\n" + 
                 "/grantAccess username - выдать пользователю @username доступ к боту\n" +
-                "/makeAdmin username - сделать пользователя @username администратором";
+                "/revokeAccess username - отозвать у пользователя @username доступ к боту\n" +
+                "/makeAdmin username - сделать пользователя @username администратором" + 
+                "/revokeAdmin username - отозвать у пользователя @username права администратора";
         } else {
             replyText =  "⛔️  Сорри, но ты не администратор"
         }
         await this.bot.sendMessage(Number(from.id), replyText)
     }
 
-    public async handleGrantAccess(from: TelegramBot.User, grantToUsername: string) {
+    public async handleGrantAccess(from: TelegramBot.User, grantToUsername?: string) {
+        let replyText: string = ""
         
+        if (typeof grantToUsername === 'undefined') {
+            replyText = "Повторите команду с указанием юзернейма пользователя через пробел без символа '@'."
+        } else {
+            
+        }
         
-        const replyText: string = "⛔️  Неизвестная команда"
+        await this.bot.sendMessage(Number(from.id), replyText)
+    }
+
+    public async handleMakeAdmin(from: TelegramBot.User, makeAdminUsername?: string) {
+        let replyText: string = ""
+        
+        if (typeof makeAdminUsername === 'undefined') {
+            replyText = "Повторите команду с указанием юзернейма пользователя через пробел без символа '@'."
+        } else {
+            
+        }
+        
         await this.bot.sendMessage(Number(from.id), replyText)
     }
 
