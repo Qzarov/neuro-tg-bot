@@ -1,0 +1,52 @@
+import { Collection, ObjectId } from "mongodb";
+
+// export interface IDbEntityService {
+//     get()
+// }
+
+export interface MongoGetParams {
+    collection: string;
+    where?: any;
+    getOne?: boolean;
+    skip?: number;
+    limit?: number;
+}
+
+export default abstract class DbEntityService {    
+    protected collection: Collection;
+
+    constructor(collection: Collection) {
+        this.collection = collection;
+    }
+
+    async findAll(where: any = {}): Promise<any[]> {
+        const query = this.collection.find(where);
+        if (where.getOne) {
+            return await query.limit(1).toArray();
+        } else {
+            return await query.toArray();
+        }
+    }
+
+    async findById(id: number): Promise<any> {
+        return await this.collection.findOne({ _id: new ObjectId(id) });
+    }
+
+    async create(entity: any): Promise<any> {
+        console.log(`creating user:`, entity);
+        return await this.collection.insertOne(entity);
+    }
+
+    async update(where: any, entity: any): Promise<any> {
+        console.log(`updating user where`, where, entity);
+        const result = await this.collection.updateOne({ where }, { $set: entity });
+        console.log(`update result`, result);
+        return result;
+    }
+
+    async delete(id: string): Promise<any> {
+        return await this.collection.deleteOne({ _id: new ObjectId(id) });
+    }
+
+    protected convertDocumentToEntity() {}
+}

@@ -14,7 +14,11 @@ const eventsHandler = new EventsHandler(tgBot)
 console.log(`Neuro bot start polling`)
 
 tgBot.bot.on("message", async (message: Message) => {
-    await eventsHandler.messageReceived(message)
+    try{
+        await eventsHandler.messageReceived(message)
+    } catch (e) {
+        console.log(`⛔️  Error while processing message:`, (e as Error).message);
+    }
 });
 
 tgBot.bot.on("callback_query", async (callbackQuery) => {
