@@ -13,7 +13,7 @@ import { Langs } from '../lib/text/types/lang';
 export enum CallbackData {
     translate = "translate", 
     approveAccess = "approveAccess",
-    cancelAccess = "cancelAccess",
+    rejectAccess = "rejectAccess",
 };
 
 export default class EventsHandler {
@@ -138,8 +138,9 @@ export default class EventsHandler {
             let replyToAdmin: string = `Доступ выдан`
 
             // Check if params are correct
-            if (params && isNaN(+params)) {
+            if (!params || (params && isNaN(+params))) {
                 console.log(`⛔️  Trying to approve access for user with ${params} as id`)
+                return
             }
 
             // Create a new user and fetch his data
@@ -154,6 +155,22 @@ export default class EventsHandler {
 
             // send messages to admin and user (status updated)
             this.bot.sendMessage(user.getTgId(), replyToUser)
+            this.bot.sendMessage(callbackData.from.id, replyToAdmin)
+        }
+
+        // TODO deligate to callbackHandler
+        if (commandWithoutParams === CallbackData.rejectAccess) {
+            let replyToUser: string = `Запрос на доступ отклонён`
+            let replyToAdmin: string = `Запрос на доступ отклонён`
+
+            // Check if params are correct
+            if (!params || (params && isNaN(+params))) {
+                console.log(`⛔️  Trying to deny access for user with ${params} as id`)
+                return
+            }
+
+            // send messages to admin and user (status updated)
+            this.bot.sendMessage(Number(params), replyToUser)
             this.bot.sendMessage(callbackData.from.id, replyToAdmin)
         }
     }
