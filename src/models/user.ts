@@ -50,11 +50,7 @@ export default class User {
     protected _userService: UserService;
 
     constructor(protected _userData: UserData) {
-        if (collections.users) {
-            this._userService = new UserService(collections.users);
-        } else {
-            throw new Error(`⛔️  Cannot creater new user: Users collection is undefined`);
-        }
+        this._userService = new UserService();
     }
 
     getTgId(): number { 

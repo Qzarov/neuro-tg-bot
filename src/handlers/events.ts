@@ -124,7 +124,7 @@ export default class EventsHandler {
             return
         }
 
-        // TODO deligate to callbackHandler
+        // TODO delegate to callbackHandler
         if (commandWithoutParams === CallbackData.translate) {
             if (msg.text) {
                 const text: TextHandler = new TextHandler(msg.text);
@@ -132,7 +132,7 @@ export default class EventsHandler {
             }
         }
 
-        // TODO deligate to callbackHandler
+        // TODO delegate to callbackHandler
         if (commandWithoutParams === CallbackData.approveAccess) {
             let replyToUser: string = `Доступ к боту успешно получен`
             let replyToAdmin: string = `Доступ выдан`
@@ -158,7 +158,7 @@ export default class EventsHandler {
             this.bot.sendMessage(callbackData.from.id, replyToAdmin)
         }
 
-        // TODO deligate to callbackHandler
+        // TODO delegate to callbackHandler
         if (commandWithoutParams === CallbackData.rejectAccess) {
             let replyToUser: string = `Запрос на доступ отклонён`
             let replyToAdmin: string = `Запрос на доступ отклонён`
@@ -169,7 +169,7 @@ export default class EventsHandler {
                 return
             }
 
-            // send messages to admin and user (status updated)
+            // send messages to admin and user (request rejected)
             this.bot.sendMessage(Number(params), replyToUser)
             this.bot.sendMessage(callbackData.from.id, replyToAdmin)
         }

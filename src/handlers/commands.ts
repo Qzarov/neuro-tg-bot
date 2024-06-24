@@ -25,7 +25,7 @@ export const Commands = {
 
 
 export default class CommandsHandler {
-    constructor(private bot: TgBot) {}
+    constructor(private bot: TgBot) {} // TODO add UserService as injection
 
     public async handleCommand(from: User, command: string) {
         const commandAndParams: string[] = command.split(' ');
@@ -112,7 +112,7 @@ export default class CommandsHandler {
 
         // Get all admins from DB
         if (collections.users) {
-            const userService = new UserService(collections.users);
+            const userService = new UserService();
             const adminsData = await userService.findAll({role: UserRole.admin});
             
             const username = from.getData().username;
@@ -122,7 +122,7 @@ export default class CommandsHandler {
                 inline_keyboard: [
                     [
                         {text: 'Одобрить', callback_data: `${CallbackData.approveAccess}:${userId}`},
-                        {text: 'Отклонить', callback_data: `${CallbackData.cancelAccess}:${userId}`},
+                        {text: 'Отклонить', callback_data: `${CallbackData.rejectAccess}:${userId}`},
                     ]
                 ]
             }
@@ -131,25 +131,37 @@ export default class CommandsHandler {
                 await this.bot.sendMessage(admin.getTgId(), messageForAdmin, keyboard)
             }
 
-            replyText = "Запрос на доступ успешно отправлен"
+            replyText = "Запрос доступа успешно отправлен"
             await this.bot.sendMessage(Number(from.getTgId()), replyText)
         } else {
             throw new Error(`⛔️  Cannot creater new user: Users collection is undefined`);
         }
-        
-        await this.bot.sendMessage(Number(from.id), replyText)
     }
 
-    public async handleMakeAdmin(from: TelegramBot.User, makeAdminUsername?: string) {
+    public async handleGrantAccess(from: User, username?: string) {
         let replyText: string = ""
         
-        if (typeof makeAdminUsername === 'undefined') {
+        if (typeof username === 'undefined' || username.length === 0) {
             replyText = "Повторите команду с указанием юзернейма пользователя через пробел без символа '@'."
         } else {
+            // get user's data from db
+            const userService = new UserService()
+            const usersData = await userService.findAll({ username: username })
+            if (usersData.length === 0) {
+                replyText = `Пользователь @${username} не найден в базе. Для того, чтобы пользователю можно было выдать доступ, он должен отправить боту команду /start`
+
+            } else if (usersData.length === 1) {
+                const user = new User(usersData[0]);
+                user.update({ role: UserRole.user });
+                replyText = `Теперь пользователь @${user.getData().username} имеет доступ к боту`;
             
+            } else if (usersData.length > 1) {
+                const usernames = usersData.map(user => user.username)
+                replyText = `По данному юзернейму найдено несколько пользователей: ${usernames.join(', ')}. Выберите пользователя, которому нужно дать доступ и повторите команду с его юзернеймом`;
+            }
         }
         
-        await this.bot.sendMessage(Number(from.id), replyText)
+        await this.bot.sendMessage(Number(from.getTgId()), replyText)
     }
 
     public async handleExitAdminMode(from: TelegramBot.User) {

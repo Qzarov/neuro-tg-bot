@@ -33,14 +33,11 @@ export default abstract class DbEntityService {
     }
 
     async create(entity: any): Promise<any> {
-        console.log(`creating user:`, entity);
         return await this.collection.insertOne(entity);
     }
 
     async update(where: any, entity: any): Promise<any> {
-        console.log(`updating user where`, where, entity);
         const result = await this.collection.updateOne({ where }, { $set: entity });
-        console.log(`update result`, result);
         return result;
     }
 
