@@ -53,6 +53,14 @@ export default class CommandsHandler {
                 await this.handleGrantAccess(from, params)
                 break;
 
+            case Commands.revokeAccess:
+                await this.handleRevokeAccess(from, params)
+                break;
+
+            case Commands.removeAdmin:
+                await this.handleRemoveAdmin(from, params)
+                break;
+
             case Commands.makeAdmin:
                 await this.handleMakeAdmin(from, params)
                 break;
@@ -139,21 +147,100 @@ export default class CommandsHandler {
     }
 
     public async handleGrantAccess(from: User, username?: string) {
+        let replyToAdmin: string = "";
+
+        /**
+         * Check rights for using command
+         */ 
+        const fromUserData = from.getData()
+        if (!(
+            fromUserData.role && 
+            [UserRole.admin, UserRole.super].includes(fromUserData.role))
+        ) {
+            replyToAdmin = `Вы не имеете доступ к этой команде`
+            await this.bot.sendMessage(Number(from.getTgId()), replyToAdmin)
+            return
+        }
+
+        /**
+         * If params are valid -> handle command 
+         */ 
+        if (typeof username === 'undefined' || username.length === 0) {
+            replyToAdmin = "Повторите команду с указанием юзернейма пользователя через пробел без символа '@'."
+        } else {
+            /**
+             * Get user's data from db
+             */ 
+            const userService = new UserService()
+            const usersData = await userService.findAll({ username: username })
+
+            if (usersData.length === 0) {
+                replyToAdmin = `Пользователь @${username} не найден в базе. Для того, чтобы пользователю можно было выдать доступ, он должен отправить боту команду /start`
+            
+            } else if (usersData.length === 1) {
+                const user = new User(usersData[0]);
+                const userData = user.getData();
+                /**
+                 * Check if the user has rights to change this role
+                 */ 
+
+                // Варианты:
+                    // Супер меняет права кого бы то ни было
+                    // Админ меняет права админа или супера
+                    // Админ меняет права юзера или гостя
+
+                if (
+                    fromUserData.role === UserRole.super ||
+                    (fromUserData.role === UserRole.admin && (userData.role === UserRole.user || userData.role === UserRole.guest))
+                ) {
+                    user.update({ role: UserRole.user });
+                    replyToAdmin = `Теперь пользователь @${user.getData().username} имеет доступ к боту`;
+                    const replyToUser = `Вам выдали доступ к боту`;
+                    await this.bot.sendMessage(userData.tgId, replyToUser)
+                } else {
+                    replyToAdmin = `Вы не можете поменять роль этого пользователя`;
+                }
+            
+            } else if (usersData.length > 1) {
+                const usernames = usersData.map(user => user.username)
+                replyToAdmin = `По данному юзернейму найдено несколько пользователей: ${usernames.join(', ')}. Выберите пользователя, которому нужно дать доступ и повторите команду с его юзернеймом`;
+            }
+        }
+        
+        await this.bot.sendMessage(Number(from.getTgId()), replyToAdmin)
+    }
+
+    public async handleRevokeAccess(from: User, username?: string) {
         let replyText: string = ""
         
+        /**
+         * Check rights for using command
+         */ 
+        const fromUserData = from.getData()
+        if (!(
+            fromUserData.role && 
+            [UserRole.admin, UserRole.super].includes(fromUserData.role))
+        ) {
+            replyText = `Вы не имеете доступ к этой команде`
+            await this.bot.sendMessage(Number(from.getTgId()), replyText)
+            return
+        }
+
         if (typeof username === 'undefined' || username.length === 0) {
             replyText = "Повторите команду с указанием юзернейма пользователя через пробел без символа '@'."
         } else {
-            // get user's data from db
             const userService = new UserService()
             const usersData = await userService.findAll({ username: username })
+
             if (usersData.length === 0) {
                 replyText = `Пользователь @${username} не найден в базе. Для того, чтобы пользователю можно было выдать доступ, он должен отправить боту команду /start`
 
             } else if (usersData.length === 1) {
                 const user = new User(usersData[0]);
-                user.update({ role: UserRole.user });
-                replyText = `Теперь пользователь @${user.getData().username} имеет доступ к боту`;
+                user.update({ role: UserRole.guest });
+                replyText = `Теперь пользователь @${user.getData().username} не имеет доступ к боту`;
+                const replyToUser = `У вас отозвали доступ к боту`;
+                await this.bot.sendMessage(user.getData().tgId, replyToUser)
             
             } else if (usersData.length > 1) {
                 const usernames = usersData.map(user => user.username)
@@ -164,9 +251,91 @@ export default class CommandsHandler {
         await this.bot.sendMessage(Number(from.getTgId()), replyText)
     }
 
-    public async handleExitAdminMode(from: TelegramBot.User) {
-        const user: User = new User({ tgId: from.id });
-        let replyText = `Текущий статус: ${UserState[await user.getState()]}`
+    public async handleMakeAdmin(from: User, username?: string) {
+        let replyText: string = ""
+        
+        /**
+         * Check rights for using command
+         */ 
+        const fromUserData = from.getData()
+        if (!(
+            fromUserData.role && 
+            [UserRole.super].includes(fromUserData.role))
+        ) {
+            replyText = `Вы не имеете доступ к этой команде`
+            await this.bot.sendMessage(Number(from.getTgId()), replyText)
+            return
+        }
+
+        if (typeof username === 'undefined' || username.length === 0) {
+            replyText = "Повторите команду с указанием юзернейма пользователя через пробел без символа '@'."
+        } else {
+            const userService = new UserService()
+            const usersData = await userService.findAll({ username: username })
+
+            if (usersData.length === 0) {
+                replyText = `Пользователь @${username} не найден в базе. Для того, чтобы пользователю можно было выдать доступ, он должен отправить боту команду /start`
+
+            } else if (usersData.length === 1) {
+                const user = new User(usersData[0]);
+                user.update({ role: UserRole.admin });
+                replyText = `Теперь пользователь @${user.getData().username} является администратором`;
+                const replyToUser = `Вам была выдана роль админстратора`;
+                await this.bot.sendMessage(user.getData().tgId, replyToUser)
+            
+            } else if (usersData.length > 1) {
+                const usernames = usersData.map(user => user.username)
+                replyText = `По данному юзернейму найдено несколько пользователей: ${usernames.join(', ')}. Выберите пользователя, которому нужно дать доступ и повторите команду с его юзернеймом`;
+            }
+        }
+        
+        await this.bot.sendMessage(Number(from.getTgId()), replyText)
+    }
+
+    public async handleRemoveAdmin(from: User, username?: string) {
+        let replyText: string = ""
+        
+        /**
+         * Check rights for using command
+         */ 
+        const fromUserData = from.getData()
+        if (!(
+            fromUserData.role && 
+            [UserRole.super].includes(fromUserData.role))
+        ) {
+            replyText = `Вы не имеете доступ к этой команде`
+            await this.bot.sendMessage(Number(from.getTgId()), replyText)
+            return
+        }
+
+        if (typeof username === 'undefined' || username.length === 0) {
+            replyText = "Повторите команду с указанием юзернейма пользователя через пробел без символа '@'."
+        } else {
+            // get user's data from db
+            const userService = new UserService()
+            const usersData = await userService.findAll({ username: username })
+
+            if (usersData.length === 0) {
+                replyText = `Пользователь @${username} не найден в базе. Для того, чтобы пользователю можно было выдать доступ, он должен отправить боту команду /start`
+
+            } else if (usersData.length === 1) {
+                const user = new User(usersData[0]);
+                user.update({ role: UserRole.user });
+                replyText = `Пользователь @${user.getData().username} больше не админстратор`;
+                const replyToUser = `Права администратора были отозваны`;
+                await this.bot.sendMessage(user.getData().tgId, replyToUser)
+            
+            } else if (usersData.length > 1) {
+                const usernames = usersData.map(user => user.username)
+                replyText = `По данному юзернейму найдено несколько пользователей: ${usernames.join(', ')}. Выберите пользователя, которому нужно дать доступ и повторите команду с его юзернеймом`;
+            }
+        }
+        
+        await this.bot.sendMessage(Number(from.getTgId()), replyText)
+    }
+
+    public async handleExitAdminMode(from: User) {
+        let replyText = `Текущий статус: ${UserState[from.getState()]}`
 
         if (from.getState() === UserState.adminMode) {
             await from.update({ state: UserState.start });

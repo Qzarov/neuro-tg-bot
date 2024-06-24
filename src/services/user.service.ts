@@ -1,5 +1,6 @@
 import { UserData, UserRole, UserState } from "../models/user";
 import DbEntityService from "./db.entity.service";
+import { collections } from "./mongo.service";
 
 
 export interface WhereUser {
