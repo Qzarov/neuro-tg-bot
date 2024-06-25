@@ -2,13 +2,7 @@ import config from "../config";
 import GPT, { GptResponse } from "../lib/gpt";
 import TextHandler from "../lib/text/text";
 import { Langs, Translation } from "../lib/text/types/lang";
-
-
-export enum AvailableNeuros {
-    GPT,
-    GEMINI // unsupported now
-}
-
+import { AvailableNeuros } from "./types";
 
 export default class NeuroManager {
     constructor() {}

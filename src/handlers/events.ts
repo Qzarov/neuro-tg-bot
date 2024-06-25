@@ -1,20 +1,14 @@
 import { error } from "console";
 import TelegramBot, { User as TgUser, Message, CallbackQuery, InlineKeyboardMarkup } from "node-telegram-bot-api";
 
-import CommandsHandler, { Commands } from "./commands";
+import CommandsHandler from "./commands";
 import TgBot from "../lib/telegram/tgBot";
-import NeuroManager, { AvailableNeuros } from "./neuro";
+import NeuroManager from "./neuro";
 import { replyKeyboardButtons } from "../lib/telegram/const/buttons";
 import User, { UserRole, UserState } from "../models/user";
 import TextHandler from "../lib/text/text";
 import { Langs } from '../lib/text/types/lang';
-
-
-export enum CallbackData {
-    translate = "translate", 
-    approveAccess = "approveAccess",
-    rejectAccess = "rejectAccess",
-};
+import { AvailableNeuros, CallbackData, Commands } from "./types";
 
 export default class EventsHandler {
     private commandsHandler: CommandsHandler

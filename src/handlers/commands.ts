@@ -3,26 +3,8 @@ import { replyKeyboardButtons } from "../lib/telegram/const/buttons";
 import TgBot from "../lib/telegram/tgBot";
 import User, { UserRole, UserState } from "../models/user";
 import { collections, UserService } from "../services/index";
-import { CallbackData } from "./events";
-
-
-export const Commands = {
-    start: "/start",
-    user: "/user",
-    admin: "/admin",
-    requestAccess: "/requestAccess",
-    grantAccess: "/grantAccess",
-    revokeAccess: "/revokeAccess",
-    makeAdmin: "/makeAdmin",
-    removeAdmin: "/removeAdmin",
-    state: "/state",
-    exitAdminMode: "/exitAdmin",
-    chooseNeuro: "Выбрать таролога",
-    useGPT: "Расклад от GPT",
-    useGemini: "Расклад от Gemini",
-    endUsingNeuro: "Закончить расклад",
-}
-
+import { CallbackData, Commands, HasAccessResult } from "./types";
+import RolesHandler from "./roles.handler";
 
 export default class CommandsHandler {
     constructor(private bot: TgBot) {} // TODO add UserService as injection
@@ -45,9 +27,9 @@ export default class CommandsHandler {
                 await this.handleAdmin(from)
                 break;
 
-                case Commands.requestAccess:
-                    await this.handleRequestAccess(from)
-                    break;
+            case Commands.requestAccess:
+                await this.handleRequestAccess(from)
+                break;
                 
             case Commands.grantAccess:
                 await this.handleGrantAccess(from, params)
@@ -149,64 +131,49 @@ export default class CommandsHandler {
     public async handleGrantAccess(from: User, username?: string) {
         let replyToAdmin: string = "";
 
+        if (typeof username === 'undefined' || username.length === 0) {
+            replyToAdmin = "Повторите команду с указанием юзернейма пользователя через пробел без символа '@'."
+            await this.bot.sendMessage(Number(from.getTgId()), replyToAdmin);
+            return;
+        }
+
+        const userService = new UserService()
+        const usersData = await userService.findByUsername(username);
+
+        // TODO delegate this check
+        if (usersData.length === 0) {
+            replyToAdmin = `Пользователь @${username} не найден в базе. Для того, чтобы пользователю можно было выдать доступ, он должен отправить боту команду /start`
+            await this.bot.sendMessage(Number(from.getTgId()), replyToAdmin);
+            return;
+
+        } else if (usersData.length > 1) {
+            const usernames = usersData.map(user => user.username)
+            replyToAdmin = `По данному юзернейму найдено несколько пользователей: ${usernames.join(', ')}. Выберите пользователя, которому нужно дать доступ и повторите команду с его юзернеймом`;
+            await this.bot.sendMessage(Number(from.getTgId()), replyToAdmin);
+            return;
+        }
+
+        const userTo = new User(usersData[0]);
+        const userToData = userTo.getData();
+        
         /**
          * Check rights for using command
          */ 
-        const fromUserData = from.getData()
-        if (!(
-            fromUserData.role && 
-            [UserRole.admin, UserRole.super].includes(fromUserData.role))
-        ) {
-            replyToAdmin = `Вы не имеете доступ к этой команде`
-            await this.bot.sendMessage(Number(from.getTgId()), replyToAdmin)
-            return
-        }
-
-        /**
-         * If params are valid -> handle command 
-         */ 
-        if (typeof username === 'undefined' || username.length === 0) {
-            replyToAdmin = "Повторите команду с указанием юзернейма пользователя через пробел без символа '@'."
+        const access: HasAccessResult = RolesHandler.hasAccess(
+            from, 
+            Commands.grantAccess,
+            { userTo: userTo}
+        )
+        if (!access.result) {
+            replyToAdmin = access.message
         } else {
-            /**
-             * Get user's data from db
-             */ 
-            const userService = new UserService()
-            const usersData = await userService.findAll({ username: username })
+            userTo.update({ role: UserRole.user });
+            replyToAdmin = `Теперь пользователь @${userToData.username} имеет доступ к боту`;
 
-            if (usersData.length === 0) {
-                replyToAdmin = `Пользователь @${username} не найден в базе. Для того, чтобы пользователю можно было выдать доступ, он должен отправить боту команду /start`
-            
-            } else if (usersData.length === 1) {
-                const user = new User(usersData[0]);
-                const userData = user.getData();
-                /**
-                 * Check if the user has rights to change this role
-                 */ 
-
-                // Варианты:
-                    // Супер меняет права кого бы то ни было
-                    // Админ меняет права админа или супера
-                    // Админ меняет права юзера или гостя
-
-                if (
-                    fromUserData.role === UserRole.super ||
-                    (fromUserData.role === UserRole.admin && (userData.role === UserRole.user || userData.role === UserRole.guest))
-                ) {
-                    user.update({ role: UserRole.user });
-                    replyToAdmin = `Теперь пользователь @${user.getData().username} имеет доступ к боту`;
-                    const replyToUser = `Вам выдали доступ к боту`;
-                    await this.bot.sendMessage(userData.tgId, replyToUser)
-                } else {
-                    replyToAdmin = `Вы не можете поменять роль этого пользователя`;
-                }
-            
-            } else if (usersData.length > 1) {
-                const usernames = usersData.map(user => user.username)
-                replyToAdmin = `По данному юзернейму найдено несколько пользователей: ${usernames.join(', ')}. Выберите пользователя, которому нужно дать доступ и повторите команду с его юзернеймом`;
-            }
+            const replyToUser = `Вам выдали доступ к боту`;
+            await this.bot.sendMessage(userToData.tgId, replyToUser)
         }
-        
+
         await this.bot.sendMessage(Number(from.getTgId()), replyToAdmin)
     }
 

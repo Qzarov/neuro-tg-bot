@@ -1,4 +1,4 @@
-import { UserData, UserRole, UserState } from "../models/user";
+import User, { UserData, UserRole, UserState } from "../models/user";
 import DbEntityService from "./db.entity.service";
 import { collections } from "./mongo.service";
 
@@ -38,5 +38,10 @@ export default class UserService extends DbEntityService {
     async update(where: WhereUser, entity: UserData): Promise<any> {
         const result = await this.collection.updateOne({ where }, { $set: entity });
         return result;
+    }
+
+    async findByUsername(username: string): Promise<UserData[]> {
+        const usersData = await this.findAll({ username: username })
+        return usersData
     }
 }
