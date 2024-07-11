@@ -10,9 +10,22 @@ export default class CommandsHandler {
     constructor(private bot: TgBot) {} // TODO add UserService as injection
 
     public async handleCommand(from: User, command: string) {
-        const commandAndParams: string[] = command.split(' ');
-        const commandWithoutParams: string | undefined = commandAndParams.shift();
-        const params = commandAndParams.join(' ');
+        let commandAndParams: string[] = [];
+        let commandWithoutParams: string | undefined;
+        let params: string | undefined;
+        
+        if ([
+            String(Commands.chooseNeuro), 
+            String(Commands.useGPT), 
+            String(Commands.useGemini),
+            String(Commands.endUsingNeuro)
+        ].includes(command)) {
+            commandWithoutParams = command
+        } else {
+            commandAndParams = command.split(' ');
+            commandWithoutParams = commandAndParams.shift();
+            params = commandAndParams.join(' ');
+        }
 
         console.log(`commandAndParams:`, commandAndParams);
         console.log(`commandWithoutParams:`, commandWithoutParams);
@@ -256,9 +269,9 @@ export default class CommandsHandler {
     private async handleCommandWithUsernameSearch(
         command: Commands, 
         from: User, 
-        username: string,
-        successFromAnswer: string,
-        successToAnswer: string,
+        username?: string,
+        successFromAnswer?: string,
+        successToAnswer?: string,
     ) {
         /**
          * Check if command is handable by this function
@@ -272,7 +285,7 @@ export default class CommandsHandler {
             throw(`CommandsHandler.handleCommandWithUsernameSearch() cannot handle command ${command}`)
         }
         
-        let replyText: string = "";
+        let replyText: string = "Есть ощущение, что что-то пошло не по плану";
 
         /**
          * Check if username is correct
@@ -336,9 +349,14 @@ export default class CommandsHandler {
             }
 
             userTo.update({ role: userToNewRole });
-            replyText = successFromAnswer.replace('username', userToData.username ?? '');
-            const replyToUser = successToAnswer;
-            await this.bot.sendMessage(userToData.tgId, replyToUser)
+            if (successFromAnswer) {
+                replyText = successFromAnswer.replace('username', userToData.username ?? '');
+            }
+            if (successToAnswer) {
+                const replyToUser = successToAnswer;
+                await this.bot.sendMessage(userToData.tgId, replyToUser)
+            }
+
         }
 
         await this.bot.sendMessage(Number(from.getTgId()), replyText)
