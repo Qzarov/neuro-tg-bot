@@ -101,8 +101,10 @@ export default class EventsHandler {
 
     async callbackReceived(callbackData: CallbackQuery) {
 
-        let msg: Message | undefined = typeof callbackData.message !== 'undefined' ? callbackData.message : undefined
-        
+        let msg: Message | undefined = 
+            typeof callbackData.message !== 'undefined' 
+            ? callbackData.message 
+            : undefined;
 
         const dataAndParams: string[] | undefined = callbackData.data?.split(':');
         const commandWithoutParams: string | undefined = dataAndParams?.shift();
