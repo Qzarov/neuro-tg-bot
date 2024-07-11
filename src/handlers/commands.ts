@@ -348,13 +348,18 @@ export default class CommandsHandler {
                     userToNewRole = UserRole.guest;
             }
 
-            userTo.update({ role: userToNewRole });
-            if (successFromAnswer) {
-                replyText = successFromAnswer.replace('username', userToData.username ?? '');
-            }
-            if (successToAnswer) {
-                const replyToUser = successToAnswer;
-                await this.bot.sendMessage(userToData.tgId, replyToUser)
+            const roleChanges: boolean = userToData.role !== userToNewRole
+            if (roleChanges) {
+                userTo.update({ role: userToNewRole });
+                if (successFromAnswer) {
+                    replyText = successFromAnswer.replace('username', userToData.username ?? '');
+                }
+                if (successToAnswer) {
+                    const replyToUser = successToAnswer;
+                    await this.bot.sendMessage(userToData.tgId, replyToUser)
+                }
+            } else {
+                replyText = `Пользователь уже имеет роль ${userToData.role}.`
             }
 
         }
