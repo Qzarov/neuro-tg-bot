@@ -3,7 +3,7 @@ import { replyKeyboardButtons } from "../lib/telegram/const/buttons";
 import TgBot from "../lib/telegram/tgBot";
 import User, { UserRole, UserState } from "../models/user";
 import { collections, UserService } from "../services/index";
-import { CallbackData, Commands, HasAccessResult } from "./types";
+import { CallbackData, Commands, UsernameValidationResult } from "./types";
 import RolesHandler from "./roles.handler";
 
 export default class CommandsHandler {
@@ -268,11 +268,75 @@ export default class CommandsHandler {
      */
     private async handleCommandWithUsernameSearch(
         command: Commands, 
-        from: User, 
+        userFrom: User, 
         username?: string,
         successFromAnswer?: string,
         successToAnswer?: string,
     ) {
+        /**
+         * Check if username is not undefined
+         */
+        if (typeof username === 'undefined') {
+            throw new Error('CommandsHandler.handleCommandWithUsernameSearch() get undefined argument `username`')
+        }
+
+        const validation = await this.validateCommandWithUsernameSearch(command, username)
+        
+        /**
+         * Validate if username exist and unique
+         */
+        if (!validation.result) {
+            await this.bot.sendMessage(Number(userFrom.getTgId()), validation.message);
+            return;
+        }
+
+        /**
+         * Check if userTo entity is not undefined
+         */
+        if (typeof validation.userTo === 'undefined') {
+            throw new Error(`Property userTo is undefined after validation`);
+        }
+
+        const userTo = validation.userTo;
+        const userToData = userTo.getData();
+        const userFromData = userFrom.getData();
+
+        /**
+         * Check if command about changing user's role
+         */
+        if ([
+            Commands.revokeAccess, 
+            Commands.grantAccess,
+            Commands.makeAdmin,
+            Commands.removeAdmin, 
+        ].includes(command)) {
+            const updatingResult = await RolesHandler.updateUserRole(userFrom, userTo, command);
+            let replyText;
+
+            if (!updatingResult.result) {
+                replyText = updatingResult.message;
+            } else {
+                replyText = `Пользователь уже имеет роль ${userToData.role}.`
+                if (updatingResult.updated) {
+                    if (successFromAnswer) {
+                        replyText = successFromAnswer.replace('username', userToData.username ?? '');
+                    }
+                    if (successToAnswer) {
+                        await this.bot.sendMessage(userToData.tgId, successToAnswer)
+                    }
+                }
+                await this.bot.sendMessage(userFromData.tgId, replyText)
+            }
+        }
+    }
+
+    /**
+     * Validate if provided username is incorrect or not unique
+     */
+    private async validateCommandWithUsernameSearch(
+        command: Commands, 
+        username: string,
+    ): Promise<UsernameValidationResult> {
         /**
          * Check if command is handable by this function
          */
@@ -282,18 +346,17 @@ export default class CommandsHandler {
             Commands.makeAdmin, 
             Commands.removeAdmin
         ].includes(command)) {
-            throw(`CommandsHandler.handleCommandWithUsernameSearch() cannot handle command ${command}`)
+            throw new Error(`CommandsHandler.handleCommandWithUsernameSearch() cannot handle command ${command}`)
         }
-        
-        let replyText: string = "Есть ощущение, что что-то пошло не по плану";
 
         /**
          * Check if username is correct
          */
         if (typeof username === 'undefined' || username.length === 0) {
-            replyText = "Повторите команду с указанием юзернейма пользователя через пробел без символа '@'."
-            await this.bot.sendMessage(Number(from.getTgId()), replyText);
-            return;
+            return {
+                result: false,
+                message: "Повторите команду с указанием юзернейма пользователя через пробел без символа '@'."
+            }
         }
 
         const userService = new UserService()
@@ -303,67 +366,23 @@ export default class CommandsHandler {
          * Check if user for given data is unique
          */
         if (usersData.length === 0) {
-            replyText = `Пользователь @${username} не найден в базе. Для того, чтобы пользователю можно было выдать доступ, он должен отправить боту команду /start`
-            await this.bot.sendMessage(Number(from.getTgId()), replyText);
-            return;
+            return {
+                result: false,
+                message: `Пользователь @${username} не найден в базе. Для того, чтобы пользователю можно было выдать доступ, он должен отправить боту команду /start`
+            }
 
         } else if (usersData.length > 1) {
             const usernames = usersData.map(user => user.username)
-            replyText = `По данному юзернейму найдено несколько пользователей: ${usernames.join(', ')}. Выберите пользователя, которому нужно дать доступ и повторите команду с его юзернеймом`;
-            await this.bot.sendMessage(Number(from.getTgId()), replyText);
-            return;
+            return {
+                result: false,
+                message: `По данному юзернейму найдено несколько пользователей: ${usernames.join(', ')}. Выберите пользователя, которому нужно дать доступ и повторите команду с его юзернеймом`
+            }
         }
 
-        const userTo = new User(usersData[0]);
-        const userToData = userTo.getData();
-
-        /**
-         * Check rights for using command
-         */ 
-        const access: HasAccessResult = RolesHandler.hasAccess(
-            from, command, { userTo: userTo}
-        )
-        if (!access.result) {
-            replyText = access.message
-        } else {
-            let userToNewRole;
-            switch(command) {
-                case Commands.revokeAccess:
-                    userToNewRole = UserRole.guest;
-                    break;
-
-                case Commands.grantAccess:
-                    userToNewRole = UserRole.user;
-                    break;
-                
-                case Commands.makeAdmin:
-                    userToNewRole = UserRole.admin;
-                    break;
-
-                case Commands.removeAdmin:
-                    userToNewRole = UserRole.user;
-                    break;
-
-                default:
-                    userToNewRole = UserRole.guest;
-            }
-
-            const roleChanges: boolean = userToData.role !== userToNewRole
-            if (roleChanges) {
-                userTo.update({ role: userToNewRole });
-                if (successFromAnswer) {
-                    replyText = successFromAnswer.replace('username', userToData.username ?? '');
-                }
-                if (successToAnswer) {
-                    const replyToUser = successToAnswer;
-                    await this.bot.sendMessage(userToData.tgId, replyToUser)
-                }
-            } else {
-                replyText = `Пользователь уже имеет роль ${userToData.role}.`
-            }
-
+        return {
+            result: true,
+            message: 'Пользователь успешно найден',
+            userTo: new User(usersData[0]),
         }
-
-        await this.bot.sendMessage(Number(from.getTgId()), replyText)
     }
 }

@@ -1,5 +1,5 @@
 import User, { UserRole } from "../models/user";
-import { Commands, HasAccessParams, HasAccessResult } from "./types";
+import { Commands, HasAccessParams, HasAccessResult, Result } from "./types";
 
 /**
  * Перед каждой командой должна идти проверка с помощью метода RolesHandler.hasAccess()
@@ -53,7 +53,7 @@ export default class RolesHandler {
          * Handle /grantAccess and /revokeAccess
          */
         if ([Commands.grantAccess, Commands.revokeAccess].includes(command)) {
-            return this.checkBotAccess(fromUserData.role, toUserData.role)
+            return this.checkChangeBotAccess(fromUserData.role, toUserData.role)
         }
 
         /**
@@ -63,18 +63,18 @@ export default class RolesHandler {
             return this.checkChangeAdminAccess(fromUserData.role, toUserData.role)
         }
 
-        // TODO add other commands access checking
+        // TODO add access checking /addTokens and /takeTokens
 
         return { result: false, message: "unknown command" }
     }
 
     static checkAdminAccess(userRole: UserRole) {
-        return userRole === UserRole.admin
+        return userRole === UserRole.admin || userRole === UserRole.super
             ? { result: true, message: "success" } 
             : { result: false, message: "Вы не обладаете правами администратора" }
     }
 
-    static checkBotAccess(userFromRole: UserRole, userToRole: UserRole): HasAccessResult {
+    static checkChangeBotAccess(userFromRole: UserRole, userToRole: UserRole): HasAccessResult {
         if (![UserRole.admin, UserRole.super].includes(userFromRole)) {
             return { result: false, message: "У вас нет доступа к этой команде" };
         }
@@ -99,6 +99,70 @@ export default class RolesHandler {
             return { result: true, message: "success"}; 
         } else {
             return { result: false, message: "Вы не можете изменить роль этого пользователя"};
+        }
+    }
+
+    static async updateUserRole(
+        userFrom: User, 
+        userTo: User, 
+        command: Commands
+    ): Promise<Result> {
+        /**
+         * Check access to change role 
+         */
+        const access: HasAccessResult = RolesHandler.hasAccess(
+            userFrom, command, { userTo: userTo}
+        )
+        if (!access.result) {
+            // await this.bot.sendMessage(Number(from.getTgId()), replyText)
+            return {
+                result: false,
+                message: access.message,
+            }
+        }
+
+        /**
+         * Change role
+         */
+        let userToNewRole;
+        switch(command) {
+            case Commands.revokeAccess:
+                userToNewRole = UserRole.guest;
+                break;
+
+            case Commands.grantAccess:
+                userToNewRole = UserRole.user;
+                break;
+
+            case Commands.makeAdmin:
+                userToNewRole = UserRole.admin;
+                break;
+
+            case Commands.removeAdmin:
+                userToNewRole = UserRole.user;
+                break;
+
+            default:
+                userToNewRole = UserRole.guest;
+        }
+
+        const userToData = userTo.getData();
+
+        const roleChanges: boolean = userToData.role !== userToNewRole
+        if (roleChanges) {
+            await userTo.update({ role: userToNewRole });
+            return {
+                result: true,
+                message: `User's role changed`,
+                updated: true,
+            }
+        } else {
+            return {
+                result: true,
+                message: `User's role doesn't changed`,
+                updated: false,
+            }
+            // replyText = `Пользователь уже имеет роль ${userToData.role}.`
         }
     }
 }
