@@ -3,50 +3,32 @@ import { replyKeyboardButtons } from "../lib/telegram/const/buttons";
 import TgBot from "../lib/telegram/tgBot";
 import User, { UserRole, UserState } from "../models/user";
 import { collections, UserService } from "../services/index";
-import { CallbackData, Commands, UsernameValidationResult } from "./types";
+import { CallbackData, CommandParams, Command, UsernameValidationResult } from "./types";
 import RolesHandler from "./roles.handler";
+import parseStringCommand from "./command.parser";
 
 export default class CommandsHandler {
     constructor(private bot: TgBot) {} // TODO add UserService as injection
 
-    public async handleCommand(from: User, command: string) {
-        let commandAndParams: string[] = [];
-        let commandWithoutParams: string | undefined;
-        let params: string | undefined;
-        
-        if ([
-            String(Commands.chooseNeuro), 
-            String(Commands.useGPT), 
-            String(Commands.useGemini),
-            String(Commands.endUsingNeuro)
-        ].includes(command)) {
-            commandWithoutParams = command
-        } else {
-            commandAndParams = command.split(' ');
-            commandWithoutParams = commandAndParams.shift();
-            params = commandAndParams.join(' ');
-        }
+    public async handleCommand(from: User, stringCommand: string) {
+        const {command, params} = parseStringCommand(stringCommand)
 
-        console.log(`commandAndParams:`, commandAndParams);
-        console.log(`commandWithoutParams:`, commandWithoutParams);
-        console.log(`params:`, params);
-
-        switch(commandWithoutParams) {
-            case Commands.start:
+        switch(command) {
+            case Command.start:
                 await this.handleStart(from)
                 break;
 
-            case Commands.admin:
+            case Command.admin:
                 await this.handleAdmin(from)
                 break;
 
-            case Commands.requestAccess:
+            case Command.requestAccess:
                 await this.handleRequestAccess(from)
                 break;
                 
-            case Commands.grantAccess:
+            case Command.grantAccess:
                 await this.handleCommandWithUsernameSearch(
-                    Commands.grantAccess,
+                    Command.grantAccess,
                     from, 
                     params,
                     `Теперь пользователь @username имеет доступ к боту`,
@@ -54,9 +36,9 @@ export default class CommandsHandler {
                 )
                 break;
 
-            case Commands.revokeAccess:
+            case Command.revokeAccess:
                 await this.handleCommandWithUsernameSearch(
-                    Commands.revokeAccess, 
+                    Command.revokeAccess, 
                     from, 
                     params,
                     `Теперь пользователь @username не имеет доступ к боту`,
@@ -64,9 +46,9 @@ export default class CommandsHandler {
                 )
                 break;
 
-            case Commands.makeAdmin:
+            case Command.makeAdmin:
                 await this.handleCommandWithUsernameSearch(
-                    Commands.makeAdmin,
+                    Command.makeAdmin,
                     from, 
                     params,
                     `Теперь пользователь @username администратор`,
@@ -74,9 +56,9 @@ export default class CommandsHandler {
                 )
                 break;
 
-            case Commands.removeAdmin:                    
+            case Command.removeAdmin:                    
                 await this.handleCommandWithUsernameSearch(
-                    Commands.removeAdmin,
+                    Command.removeAdmin,
                     from, 
                     params,
                     `Пользователь @username больше не администратор`,
@@ -84,27 +66,37 @@ export default class CommandsHandler {
                 )
                 break;
 
-            case Commands.exitAdminMode:
+            case Command.addTokens: 
+                await this.handleCommandWithUsernameSearch(
+                    Command.addTokens,
+                    from,
+                    params,
+                    `Пользователю @username добавлено tokens токенов`,
+                    `Вам начислено tokens токенов`
+                );
+                break;
+
+            case Command.exitAdminMode:
                 await this.handleExitAdminMode(from);
                 break;
 
-            case Commands.state:
+            case Command.state:
                 await this.handleState(from);
                 break;
 
-            case Commands.chooseNeuro:
+            case Command.chooseNeuro:
                 await this.handleChooseNeuro(from)
                 break;
 
-            case Commands.useGPT:
+            case Command.useGPT:
                 await this.handleSetUseGpt(from)
                 break;
 
-            case Commands.useGemini:
+            case Command.useGemini:
                 await this.handleSetUseGemini(from)
                 break;
 
-            case Commands.endUsingNeuro:
+            case Command.endUsingNeuro:
                 await this.handleEndUsingNeuro(from)
                 break;
 
@@ -267,20 +259,20 @@ export default class CommandsHandler {
      *  - /removeAdmin
      */
     private async handleCommandWithUsernameSearch(
-        command: Commands, 
+        command: Command, 
         userFrom: User, 
-        username?: string,
+        params?: CommandParams,
         successFromAnswer?: string,
         successToAnswer?: string,
     ) {
         /**
          * Check if username is not undefined
          */
-        if (typeof username === 'undefined') {
+        if (typeof params?.username === 'undefined') {
             throw new Error('CommandsHandler.handleCommandWithUsernameSearch() get undefined argument `username`')
         }
 
-        const validation = await this.validateCommandWithUsernameSearch(command, username)
+        const validation = await this.validateCommandWithUsernameSearch(command, params.username)
         
         /**
          * Validate if username exist and unique
@@ -305,10 +297,10 @@ export default class CommandsHandler {
          * Check if command about changing user's role
          */
         if ([
-            Commands.revokeAccess, 
-            Commands.grantAccess,
-            Commands.makeAdmin,
-            Commands.removeAdmin, 
+            Command.revokeAccess, 
+            Command.grantAccess,
+            Command.makeAdmin,
+            Command.removeAdmin, 
         ].includes(command)) {
             const updatingResult = await RolesHandler.updateUserRole(userFrom, userTo, command);
             let replyText;
@@ -334,17 +326,17 @@ export default class CommandsHandler {
      * Validate if provided username is incorrect or not unique
      */
     private async validateCommandWithUsernameSearch(
-        command: Commands, 
+        command: Command, 
         username: string,
     ): Promise<UsernameValidationResult> {
         /**
          * Check if command is handable by this function
          */
         if (![
-            Commands.grantAccess, 
-            Commands.revokeAccess, 
-            Commands.makeAdmin, 
-            Commands.removeAdmin
+            Command.grantAccess, 
+            Command.revokeAccess, 
+            Command.makeAdmin, 
+            Command.removeAdmin
         ].includes(command)) {
             throw new Error(`CommandsHandler.handleCommandWithUsernameSearch() cannot handle command ${command}`)
         }

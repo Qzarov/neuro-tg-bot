@@ -8,7 +8,7 @@ import { replyKeyboardButtons } from "../lib/telegram/const/buttons";
 import User, { UserRole, UserState } from "../models/user";
 import TextHandler from "../lib/text/text";
 import { Langs } from '../lib/text/types/lang';
-import { AvailableNeuros, CallbackData, Commands } from "./types";
+import { AvailableNeuros, CallbackData, Command } from "./types";
 
 export default class EventsHandler {
     private commandsHandler: CommandsHandler
@@ -39,7 +39,7 @@ export default class EventsHandler {
             throw error(`⛔️  Error! Type of message's text is ${typeof text}:`, text)
         }
 
-        if (text === Commands.requestAccess) {
+        if (text === Command.requestAccess) {
             await this.commandsHandler.handleCommand(user, text);
             return;
         } else if (!user.hasAccessToBot()) {
@@ -48,7 +48,7 @@ export default class EventsHandler {
         }
 
         if (user.isUsingNeuro()) {
-            if (text === Commands.endUsingNeuro) {
+            if (text === Command.endUsingNeuro) {
                 await this.commandsHandler.handleEndUsingNeuro(user);
                 return
             }

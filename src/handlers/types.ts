@@ -1,6 +1,6 @@
 import User from "../models/user";
 
-export enum Commands {
+export enum Command {
     start = "/start",
     user = "/user",
     admin = "/admin",
@@ -20,6 +20,16 @@ export enum Commands {
     endUsingNeuro = "Закончить расклад",
 };
 
+export type CommandParams = {
+    username?: string;
+    tokens?: number;
+};
+
+export type CommandWithParams = {
+    command: Command;
+    params?: CommandParams;
+};
+
 export enum CallbackData {
     translate = "translate", 
     approveAccess = "approveAccess",
@@ -29,11 +39,6 @@ export enum CallbackData {
 export enum AvailableNeuros {
     GPT,
     GEMINI // unsupported now
-};
-
-export type HasAccessParams = {
-    userTo?: User;
-    tokens?: number;
 };
 
 /**

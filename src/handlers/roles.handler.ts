@@ -1,5 +1,5 @@
 import User, { UserRole } from "../models/user";
-import { Commands, HasAccessParams, HasAccessResult, Result } from "./types";
+import { Command, HasAccessResult, Result } from "./types";
 
 /**
  * Перед каждой командой должна идти проверка с помощью метода RolesHandler.hasAccess()
@@ -24,7 +24,7 @@ export default class RolesHandler {
      * 
      * @return Если требуемый параметр не предоставлен, возвращает `false`
      */
-    static hasAccess(from: User, command: Commands, params?: HasAccessParams): HasAccessResult  {
+    static hasAccess(from: User, command: Command, userTo?: User): HasAccessResult  {
         // TODO delegate data checking?
         const fromUserData = from.getData()
         if (!fromUserData.role) {
@@ -35,7 +35,7 @@ export default class RolesHandler {
         /**
          * Handle /admin
          */
-        if (command === Commands.admin) {
+        if (command === Command.admin) {
             return this.checkAdminAccess(fromUserData.role);
         }
 
@@ -43,23 +43,23 @@ export default class RolesHandler {
          * Block for commands that require params.userTo field.
          * Check if userTo is not undefined & it's role is not undefined
          */
-        const toUserData = params?.userTo?.getData()
+        const toUserData = userTo?.getData()
         if (!toUserData?.role) {
-            console.log(`⛔️  RolesHandler.hasAccess() get undefined params.userTo.role:`, params)
+            console.log(`⛔️  RolesHandler.hasAccess() get undefined params.userTo.role:`, userTo)
             return { result: false, message: "params.userTo has undefined role" };
         }
 
         /**
          * Handle /grantAccess and /revokeAccess
          */
-        if ([Commands.grantAccess, Commands.revokeAccess].includes(command)) {
+        if ([Command.grantAccess, Command.revokeAccess].includes(command)) {
             return this.checkChangeBotAccess(fromUserData.role, toUserData.role)
         }
 
         /**
          * Handle /makeAdmin and /removeAdmin
          */
-        if ([Commands.makeAdmin, Commands.removeAdmin].includes(command)) {
+        if ([Command.makeAdmin, Command.removeAdmin].includes(command)) {
             return this.checkChangeAdminAccess(fromUserData.role, toUserData.role)
         }
 
@@ -105,13 +105,13 @@ export default class RolesHandler {
     static async updateUserRole(
         userFrom: User, 
         userTo: User, 
-        command: Commands
+        command: Command
     ): Promise<Result> {
         /**
          * Check access to change role 
          */
         const access: HasAccessResult = RolesHandler.hasAccess(
-            userFrom, command, { userTo: userTo}
+            userFrom, command, userTo
         )
         if (!access.result) {
             // await this.bot.sendMessage(Number(from.getTgId()), replyText)
@@ -126,19 +126,19 @@ export default class RolesHandler {
          */
         let userToNewRole;
         switch(command) {
-            case Commands.revokeAccess:
+            case Command.revokeAccess:
                 userToNewRole = UserRole.guest;
                 break;
 
-            case Commands.grantAccess:
+            case Command.grantAccess:
                 userToNewRole = UserRole.user;
                 break;
 
-            case Commands.makeAdmin:
+            case Command.makeAdmin:
                 userToNewRole = UserRole.admin;
                 break;
 
-            case Commands.removeAdmin:
+            case Command.removeAdmin:
                 userToNewRole = UserRole.user;
                 break;
 
