@@ -19,6 +19,8 @@ export default class RolesHandler {
      *  - /revokeAccess (требует params.userTo)
      *  - /makeAdmin    (требует params.userTo)
      *  - /removeAdmin  (требует params.userTo)
+     *  - /addTokens    (требует params.userTo и params.tokens) 
+     *  - /takeTokens    (требует params.userTo и params.tokens) 
      * 
      * Остальные команды: TODO
      * 
@@ -35,7 +37,9 @@ export default class RolesHandler {
         /**
          * Handle /admin
          */
-        if (command === Command.admin) {
+        if ([
+            Command.admin,
+        ].includes(command)) {
             return this.checkAdminAccess(fromUserData.role);
         }
 
@@ -50,17 +54,28 @@ export default class RolesHandler {
         }
 
         /**
-         * Handle /grantAccess and /revokeAccess
+         * Handle:
+         *  - /grantAccess
+         *  - /revokeAccess
          */
         if ([Command.grantAccess, Command.revokeAccess].includes(command)) {
             return this.checkChangeBotAccess(fromUserData.role, toUserData.role)
         }
 
         /**
-         * Handle /makeAdmin and /removeAdmin
+         * Handle: 
+         * - /makeAdmin
+         * - /removeAdmin
+         * - /addTokens
+         * - /takeTokens
          */
-        if ([Command.makeAdmin, Command.removeAdmin].includes(command)) {
-            return this.checkChangeAdminAccess(fromUserData.role, toUserData.role)
+        if ([
+            Command.makeAdmin, 
+            Command.removeAdmin,
+            Command.addTokens, 
+            Command.takeTokens,
+        ].includes(command)) {
+            return this.checkChangeUser(fromUserData.role, toUserData.role)
         }
 
         // TODO add access checking /addTokens and /takeTokens
@@ -90,15 +105,19 @@ export default class RolesHandler {
         }
     }
 
-    static checkChangeAdminAccess(userFromRole: UserRole, userToRole: UserRole): HasAccessResult {
-        if (![UserRole.super].includes(userFromRole)) {
+    static checkChangeUser(userFromRole: UserRole, userToRole: UserRole): HasAccessResult {
+        const userAdminOrSuper = [UserRole.admin, UserRole.super].includes(userFromRole)
+        if (!userAdminOrSuper) {
             return { result: false, message: "У вас нет доступа к этой команде" };
         }
 
-        if (![UserRole.super].includes(userToRole)) { 
-            return { result: true, message: "success"}; 
+        const bothAdmins = userFromRole == UserRole.admin && userToRole === UserRole.admin
+        const changeSuperRole = userToRole === UserRole.super
+
+        if (bothAdmins || changeSuperRole) { 
+            return { result: false, message: "Вы не можете изменить данные этого пользователя"};             
         } else {
-            return { result: false, message: "Вы не можете изменить роль этого пользователя"};
+            return { result: true, message: "success"};
         }
     }
 
@@ -114,7 +133,6 @@ export default class RolesHandler {
             userFrom, command, userTo
         )
         if (!access.result) {
-            // await this.bot.sendMessage(Number(from.getTgId()), replyText)
             return {
                 result: false,
                 message: access.message,

@@ -19,6 +19,10 @@ import { CommandParams, Command, CommandWithParams } from "./types";
  * - /revokeAccess  username
  * - /makeAdmin     username
  * - /removeAdmin   username
+ * 
+ * 3. With username and number of tokens
+ * - /addTokens username tokens
+ * - /takeTokens username tokens
  */
 export default function parseStringCommand(command: string): CommandWithParams {
     console.log(`parse command:`, command);
@@ -29,6 +33,7 @@ export default function parseStringCommand(command: string): CommandWithParams {
         String(Command.start), 
         String(Command.requestAccess),
         String(Command.userStats),
+        String(Command.admin),
         String(Command.exitAdminMode),
         String(Command.state),
         String(Command.chooseNeuro), 
@@ -64,7 +69,6 @@ export default function parseStringCommand(command: string): CommandWithParams {
         String(Command.makeAdmin),
         String(Command.removeAdmin),
     ].includes(extractedCommand)) {
-        console.log('Command with one parameter');
         return { 
             command: extractedCommand as Command,
             params: { 
@@ -88,7 +92,9 @@ export default function parseStringCommand(command: string): CommandWithParams {
         String(Command.addTokens), 
         String(Command.takeTokens), 
     ].includes(extractedCommand)) {
-        console.log('Command with two parameters');
+        if (!Number.isInteger(parseInt(splittedParams[1]))) {
+            throw new Error(`Error parsing tokens from '${command}': '${splittedParams[1]}' is not a number`)
+        }
         return { 
             command: extractedCommand as Command,
             params: { 

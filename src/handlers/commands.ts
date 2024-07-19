@@ -3,7 +3,7 @@ import { replyKeyboardButtons } from "../lib/telegram/const/buttons";
 import TgBot from "../lib/telegram/tgBot";
 import User, { UserRole, UserState } from "../models/user";
 import { collections, UserService } from "../services/index";
-import { CallbackData, CommandParams, Command, UsernameValidationResult } from "./types";
+import { CallbackData, CommandParams, Command, UsernameValidationResult, HasAccessResult } from "./types";
 import RolesHandler from "./roles.handler";
 import parseStringCommand from "./command.parser";
 
@@ -11,97 +11,112 @@ export default class CommandsHandler {
     constructor(private bot: TgBot) {} // TODO add UserService as injection
 
     public async handleCommand(from: User, stringCommand: string) {
-        const {command, params} = parseStringCommand(stringCommand)
+        try {
+            const {command, params} = parseStringCommand(stringCommand)
 
-        switch(command) {
-            case Command.start:
-                await this.handleStart(from)
-                break;
+            switch(command) {
+                case Command.start:
+                    await this.handleStart(from)
+                    break;
 
-            case Command.admin:
-                await this.handleAdmin(from)
-                break;
+                case Command.admin:
+                    await this.handleAdmin(from)
+                    break;
 
-            case Command.requestAccess:
-                await this.handleRequestAccess(from)
-                break;
-                
-            case Command.grantAccess:
-                await this.handleCommandWithUsernameSearch(
-                    Command.grantAccess,
-                    from, 
-                    params,
-                    `Теперь пользователь @username имеет доступ к боту`,
-                    `Вам выдали доступ к боту`
-                )
-                break;
+                case Command.requestAccess:
+                    await this.handleRequestAccess(from)
+                    break;
+                    
+                case Command.grantAccess:
+                    await this.handleCommandWithUsernameSearch(
+                        Command.grantAccess,
+                        from, 
+                        params,
+                        `Теперь пользователь @username имеет доступ к боту`,
+                        `Вам выдали доступ к боту`
+                    )
+                    break;
 
-            case Command.revokeAccess:
-                await this.handleCommandWithUsernameSearch(
-                    Command.revokeAccess, 
-                    from, 
-                    params,
-                    `Теперь пользователь @username не имеет доступ к боту`,
-                    `У вас отозвали доступ к боту`
-                )
-                break;
+                case Command.revokeAccess:
+                    await this.handleCommandWithUsernameSearch(
+                        Command.revokeAccess, 
+                        from, 
+                        params,
+                        `Теперь пользователь @username не имеет доступ к боту`,
+                        `У вас отозвали доступ к боту`
+                    )
+                    break;
 
-            case Command.makeAdmin:
-                await this.handleCommandWithUsernameSearch(
-                    Command.makeAdmin,
-                    from, 
-                    params,
-                    `Теперь пользователь @username администратор`,
-                    `Вам была выдана роль админстратора`
-                )
-                break;
+                case Command.makeAdmin:
+                    await this.handleCommandWithUsernameSearch(
+                        Command.makeAdmin,
+                        from, 
+                        params,
+                        `Теперь пользователь @username администратор`,
+                        `Вам была выдана роль админстратора`
+                    )
+                    break;
 
-            case Command.removeAdmin:                    
-                await this.handleCommandWithUsernameSearch(
-                    Command.removeAdmin,
-                    from, 
-                    params,
-                    `Пользователь @username больше не администратор`,
-                    `Права администратора были отозваны`
-                )
-                break;
+                case Command.removeAdmin:                    
+                    await this.handleCommandWithUsernameSearch(
+                        Command.removeAdmin,
+                        from, 
+                        params,
+                        `Пользователь @username больше не администратор`,
+                        `Права администратора были отозваны`
+                    )
+                    break;
 
-            case Command.addTokens: 
-                await this.handleCommandWithUsernameSearch(
-                    Command.addTokens,
-                    from,
-                    params,
-                    `Пользователю @username добавлено tokens токенов`,
-                    `Вам начислено tokens токенов`
-                );
-                break;
+                case Command.addTokens: 
+                    await this.handleCommandWithUsernameSearch(
+                        Command.addTokens,
+                        from,
+                        params,
+                        `Пользователю @username добавлено tokens токенов. Всего: tokensTotal`,
+                        `Вам начислено tokens токенов. Всего: tokensTotal`
+                    );
+                    break;
 
-            case Command.exitAdminMode:
-                await this.handleExitAdminMode(from);
-                break;
+                case Command.takeTokens: 
+                    await this.handleCommandWithUsernameSearch(
+                        Command.takeTokens,
+                        from,
+                        params,
+                        `Количество токенов пользователя @username уменьшено на tokens. Всего: tokensTotal`,
+                        `Количество ваших токенов уменьшено на tokens. Всего: tokensTotal`
+                    );
+                    break;
 
-            case Command.state:
-                await this.handleState(from);
-                break;
+                case Command.exitAdminMode:
+                    await this.handleExitAdminMode(from);
+                    break;
 
-            case Command.chooseNeuro:
-                await this.handleChooseNeuro(from)
-                break;
+                case Command.state:
+                    await this.handleState(from);
+                    break;
 
-            case Command.useGPT:
-                await this.handleSetUseGpt(from)
-                break;
+                case Command.chooseNeuro:
+                    await this.handleChooseNeuro(from)
+                    break;
 
-            case Command.useGemini:
-                await this.handleSetUseGemini(from)
-                break;
+                case Command.useGPT:
+                    await this.handleSetUseGpt(from)
+                    break;
 
-            case Command.endUsingNeuro:
-                await this.handleEndUsingNeuro(from)
-                break;
+                case Command.useGemini:
+                    await this.handleSetUseGemini(from)
+                    break;
 
-            default:
-                await this.handleUnknownCommand(from)
+                case Command.endUsingNeuro:
+                    await this.handleEndUsingNeuro(from)
+                    break;
+
+                default:
+                    await this.handleUnknownCommand(from)
+            }
+        } catch (err) {
+            console.error("Error while handling command:", err);
+            await this.bot.sendMessage(Number(from.getTgId()), `Ошибка: ` + (err as Error).message);
         }
     }
 
@@ -115,6 +130,8 @@ export default class CommandsHandler {
                 "- /revokeAccess username - отозвать у пользователя @username доступ к боту\n" +
                 "- /makeAdmin username - сделать пользователя @username администратором\n" + 
                 "- /revokeAdmin username - отозвать у пользователя @username права администратора";
+                "- /addTokens username tokens - добавить пользователю @username tokens токенов";
+                "- /takeTokens username tokens - уменьшить количество токенов пользователя @username на tokens";
         } else {
             replyText =  "⛔️  Сорри, но ты не администратор"
         }
@@ -294,6 +311,17 @@ export default class CommandsHandler {
         const userFromData = userFrom.getData();
 
         /**
+         * Check if user has access to this command
+         */
+        const access: HasAccessResult = RolesHandler.hasAccess(
+            userFrom, command, userTo
+        )
+        if (!access.result) {
+            await this.bot.sendMessage(userFromData.tgId, access.message)
+            return;
+        }
+
+        /**
          * Check if command about changing user's role
          */
         if ([
@@ -319,6 +347,48 @@ export default class CommandsHandler {
                 }
                 await this.bot.sendMessage(userFromData.tgId, replyText)
             }
+            return;
+        }
+
+        /**
+         * Check if command is about changing amount of tokens
+         */
+        if ([
+            Command.addTokens, 
+            Command.takeTokens
+        ].includes(command)) {
+            if (typeof params.tokens === 'undefined') {
+                await this.bot.sendMessage(userFromData.tgId, `Необходимо указать количество токенов.`);
+                return;
+            }
+
+            let tokens = Number(params.tokens)
+            if (command === Command.takeTokens) {
+                tokens *= -1;
+            }
+
+            const currentTokens = Number(userToData.tokensAvailable)
+            const totalTokens = currentTokens + tokens >= 0 ? currentTokens + tokens : 0
+
+            await userTo.update({
+                tokensAvailable: totalTokens
+            })
+
+            if (successFromAnswer) {
+                const replyFromText = successFromAnswer
+                                            .replace('username', userToData.username ?? '')
+                                            .replace('tokens', String(Math.abs(tokens)))
+                                            .replace('tokensTotal', String(totalTokens))
+                await this.bot.sendMessage(userFromData.tgId, replyFromText);
+            }
+            if (successToAnswer) {
+                const replyToText = successToAnswer
+                                            .replace('tokens', String(Math.abs(tokens)))
+                                            .replace('tokensTotal', String(totalTokens))
+                await this.bot.sendMessage(userToData.tgId, replyToText)
+            }
+
+            return;
         }
     }
 
@@ -336,7 +406,9 @@ export default class CommandsHandler {
             Command.grantAccess, 
             Command.revokeAccess, 
             Command.makeAdmin, 
-            Command.removeAdmin
+            Command.removeAdmin,
+            Command.addTokens, 
+            Command.takeTokens,
         ].includes(command)) {
             throw new Error(`CommandsHandler.handleCommandWithUsernameSearch() cannot handle command ${command}`)
         }
