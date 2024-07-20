@@ -1,3 +1,4 @@
+import { ApiTokenType } from "../models/apiToken";
 import User from "../models/user";
 
 export enum Command {
@@ -12,8 +13,11 @@ export enum Command {
     state = "/state",
     exitAdminMode = "/exitAdmin",
     userStats = "/userStats", // TODO add handler
-    addTokens = "/addTokens", // TODO add handler
-    takeTokens = "/takeTokens", // TODO add handler
+    addTokens = "/addTokens",
+    takeTokens = "/takeTokens",
+    getApiTokens = "/getApiTokens",
+    addApiToken = "/addApiToken",
+    deleteApiToken = "/deleteApiToken",
     chooseNeuro = "Выбрать таролога",
     useGPT = "Расклад от GPT",
     useGemini = "Расклад от Gemini",
@@ -23,6 +27,8 @@ export enum Command {
 export type CommandParams = {
     username?: string;
     tokens?: number;
+    apiTokenType?: ApiTokenType;
+    apiToken?: string;
 };
 
 export type CommandWithParams = {

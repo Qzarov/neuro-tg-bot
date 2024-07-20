@@ -1,4 +1,5 @@
-import { CommandParams, Command, CommandWithParams } from "./types";
+import { ApiTokenType } from "../models/apiToken";
+import { Command, CommandWithParams } from "./types";
 
 /**
  * Parses a command and returns Command and parameters
@@ -14,20 +15,28 @@ import { CommandParams, Command, CommandWithParams } from "./types";
  * - "Расклад от Gemini"
  * - "Закончить расклад"
  * 
- * 2. With one parameter:
+ * 2. With username as a parameter:
  * - /grantAccess   username
  * - /revokeAccess  username
  * - /makeAdmin     username
  * - /removeAdmin   username
  * 
- * 3. With username and number of tokens
+ * 3. With apiTokenType as a parameter:
+ * - /getApiTokens  apiTokenType
+ * 
+ * 4. With token as a parameter:
+ * - /deleteApiToken  token
+ * 
+ * 5. With username and number of tokens:
  * - /addTokens username tokens
  * - /takeTokens username tokens
+ * 
+ * 6. With tokenType and token as parameters:
+ * - /addApiToken apiTokenType token
  */
 export default function parseStringCommand(command: string): CommandWithParams {
-    console.log(`parse command:`, command);
     /**
-     * Check commands without parameters
+     * 1. Check commands without parameters
      */
     if ([
         String(Command.start), 
@@ -56,12 +65,12 @@ export default function parseStringCommand(command: string): CommandWithParams {
     if (typeof extractedCommand === 'undefined') {
         throw new Error(`Error parsing '${command}': undefined after shifting`)
     }
-    if (!splittedParams.length) {
+    if (!splittedParams.length && command !== Command.getApiTokens) {
         throw new Error(`Command '${command}' doesn't contain parameters`)
     }
 
     /**
-     * Check commands with username as parameter
+     * 2. Check commands with username as parameter
      */
     if ([
         String(Command.grantAccess), 
@@ -78,15 +87,45 @@ export default function parseStringCommand(command: string): CommandWithParams {
     }
 
     /**
-     * Split the remaining parameters
+     * 3. Check commands with tokenType as parameter
+     */
+    if ([
+        String(Command.getApiTokens), 
+    ].includes(extractedCommand)) {
+        const tokenType: ApiTokenType = splittedParams.length == 1 
+            ? splittedParams[0] as ApiTokenType 
+            : ApiTokenType.ALL;
+        return { 
+            command: extractedCommand as Command,
+            params: { 
+                apiTokenType: tokenType,
+            },
+        };
+    }
+
+    /**
+     * 4. Check commands with token as parameter
+     */
+    if ([
+        String(Command.deleteApiToken), 
+    ].includes(extractedCommand)) {
+        return { 
+            command: extractedCommand as Command,
+            params: { 
+                apiToken: splittedParams[0],
+            },
+        };
+    }
+
+    /**
+     * Check number of the remaining parameters
      */
     if (splittedParams.length < 2) {
-        console.log(`params:`, splittedParams)
         throw new Error(`Command '${command}' doesn't contain enough parameters`)
     }
 
     /**
-     * Check commands with username and tokens as parameter
+     * 5. Check commands with username and number of tokens as parameters
      */
     if ([
         String(Command.addTokens), 
@@ -104,5 +143,20 @@ export default function parseStringCommand(command: string): CommandWithParams {
         };
     }
     
+    /**
+     * 6. Check commands with tokenType and apiToken as parameters
+     */
+    if ([
+        String(Command.addApiToken), 
+    ].includes(extractedCommand)) {
+        return { 
+            command: extractedCommand as Command,
+            params: { 
+                apiTokenType: splittedParams[0] as ApiTokenType,
+                apiToken: splittedParams[1],
+            },
+        };
+    }
+
     throw new Error(`Unknown command '${command}'`)
 }

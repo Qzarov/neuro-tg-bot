@@ -6,13 +6,23 @@ import { collections, UserService } from "../services/index";
 import { CallbackData, CommandParams, Command, UsernameValidationResult, HasAccessResult } from "./types";
 import RolesHandler from "./roles.handler";
 import parseStringCommand from "./command.parser";
+import ApiTokenService from "../services/apiTokens.service";
+import { ApiTokenType } from "../models/apiToken";
 
 export default class CommandsHandler {
     constructor(private bot: TgBot) {} // TODO add UserService as injection
 
     public async handleCommand(from: User, stringCommand: string) {
         try {
+            /**
+             * Parse command and params from string
+             */
             const {command, params} = parseStringCommand(stringCommand)
+            console.log('command:', command, ', params:', params);
+
+            /**
+             * // TODO Check user's access to command
+             */
 
             switch(command) {
                 case Command.start:
@@ -109,6 +119,18 @@ export default class CommandsHandler {
 
                 case Command.endUsingNeuro:
                     await this.handleEndUsingNeuro(from)
+                    break;
+
+                case Command.getApiTokens:
+                    await this.handleApiTokenCommand(Command.getApiTokens, from, params)
+                    break;
+
+                case Command.addApiToken:
+                    await this.handleApiTokenCommand(Command.addApiToken, from, params)
+                    break;
+                
+                case Command.deleteApiToken:
+                    await this.handleApiTokenCommand(Command.deleteApiToken, from, params)
                     break;
 
                 default:
@@ -447,6 +469,35 @@ export default class CommandsHandler {
             result: true,
             message: 'Пользователь успешно найден',
             userTo: new User(usersData[0]),
+        }
+    }
+
+    async handleApiTokenCommand(command: Command, from: User, params?: CommandParams) {
+        const apiTokenService = new ApiTokenService();
+
+        if (command === Command.getApiTokens) {
+            const where = 
+                typeof params?.apiTokenType === 'undefined' || params?.apiTokenType === ApiTokenType.ALL 
+                ? undefined 
+                : { type: params?.apiTokenType }
+            const apiKeys = await apiTokenService.findAll(where);
+            await this.bot.sendMessage(from.getTgId(), JSON.stringify(apiKeys));
+        }
+        
+        if (command === Command.addApiToken) {
+            const token = {
+                type: params?.apiTokenType,
+                token: params?.apiToken,
+                usages: 0,
+                isWorking: true,
+            }
+            const res = await apiTokenService.create(token);
+            await this.bot.sendMessage(from.getTgId(), `API токен добавлен: ${JSON.stringify(res)}`);
+        }
+
+        if (command === Command.deleteApiToken) {
+            const res = await apiTokenService.delete({ token: params?.apiToken });
+            await this.bot.sendMessage(from.getTgId(), `API токен удален: ${params?.apiToken}`);
         }
     }
 }

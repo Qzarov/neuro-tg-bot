@@ -41,8 +41,8 @@ export default abstract class DbEntityService {
         return result;
     }
 
-    async delete(id: string): Promise<any> {
-        return await this.collection.deleteOne({ _id: new ObjectId(id) });
+    async delete(where: any): Promise<any> {
+        return await this.collection.deleteOne(where);
     }
 
     protected convertDocumentToEntity() {}
