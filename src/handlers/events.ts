@@ -95,8 +95,6 @@ export default class EventsHandler {
         } catch (err) {
             console.log(`⛔️  Error while handling message: ${err}`)
         }
-    
-        //textMessagesHanler.handleMessage(userId, text)
     }
 
     async callbackReceived(callbackData: CallbackQuery) {

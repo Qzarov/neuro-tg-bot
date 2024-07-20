@@ -19,10 +19,15 @@ export default class CommandsHandler {
              */
             const {command, params} = parseStringCommand(stringCommand)
             console.log('command:', command, ', params:', params);
-
+            
             /**
-             * // TODO Check user's access to command
+             * Check if user has access to this command
              */
+            const access: HasAccessResult = RolesHandler.hasAccessToCommand(from, command)
+            if (!access.result) {
+                await this.bot.sendMessage(from.getTgId(), access.message)
+                return;
+            }
 
             switch(command) {
                 case Command.start:
@@ -144,19 +149,15 @@ export default class CommandsHandler {
 
     public async handleAdmin(from: User) {
         let replyText: string = "Welcome to the Crypto Tarot!"
-        if (from.hasAdminRights()) {
-            from.update({ state: UserState.adminMode});
-            replyText = 
-                "Теперь ты в режиме администратора. Доступные команды:\n" + 
-                "- /grantAccess username - выдать пользователю @username доступ к боту\n" +
-                "- /revokeAccess username - отозвать у пользователя @username доступ к боту\n" +
-                "- /makeAdmin username - сделать пользователя @username администратором\n" + 
-                "- /revokeAdmin username - отозвать у пользователя @username права администратора";
-                "- /addTokens username tokens - добавить пользователю @username tokens токенов";
-                "- /takeTokens username tokens - уменьшить количество токенов пользователя @username на tokens";
-        } else {
-            replyText =  "⛔️  Сорри, но ты не администратор"
-        }
+        from.update({ state: UserState.adminMode});
+        replyText = 
+            "Теперь ты в режиме администратора. Доступные команды:\n" + 
+            "- /grantAccess username - выдать пользователю @username доступ к боту\n" +
+            "- /revokeAccess username - отозвать у пользователя @username доступ к боту\n" +
+            "- /makeAdmin username - сделать пользователя @username администратором\n" + 
+            "- /revokeAdmin username - отозвать у пользователя @username права администратора";
+            "- /addTokens username tokens - добавить пользователю @username tokens токенов";
+            "- /takeTokens username tokens - уменьшить количество токенов пользователя @username на tokens";
         await this.bot.sendMessage(Number(from.getTgId()), replyText)
     }
 
@@ -213,7 +214,7 @@ export default class CommandsHandler {
     }
 
     public async handleStart(from: User) {
-        let replyText: string = "Welcome to the Crypto Tarot!"
+        let replyText: string = "Добро пожаловать в мастерскую предсказаний! Выбери твоего таролога."
         
         const keyboard: ReplyKeyboardMarkup = {
             keyboard: [
@@ -296,6 +297,8 @@ export default class CommandsHandler {
      *  - /revokeAccess
      *  - /makeAdmin
      *  - /removeAdmin
+     *  - /addTokens
+     *  - /takeTokens
      */
     private async handleCommandWithUsernameSearch(
         command: Command, 
@@ -304,14 +307,8 @@ export default class CommandsHandler {
         successFromAnswer?: string,
         successToAnswer?: string,
     ) {
-        /**
-         * Check if username is not undefined
-         */
-        if (typeof params?.username === 'undefined') {
-            throw new Error('CommandsHandler.handleCommandWithUsernameSearch() get undefined argument `username`')
-        }
 
-        const validation = await this.validateCommandWithUsernameSearch(command, params.username)
+        const validation = await this.validateCommandWithUsernameSearch(command, params?.username)
         
         /**
          * Validate if username exist and unique
@@ -333,17 +330,6 @@ export default class CommandsHandler {
         const userFromData = userFrom.getData();
 
         /**
-         * Check if user has access to this command
-         */
-        const access: HasAccessResult = RolesHandler.hasAccess(
-            userFrom, command, userTo
-        )
-        if (!access.result) {
-            await this.bot.sendMessage(userFromData.tgId, access.message)
-            return;
-        }
-
-        /**
          * Check if command about changing user's role
          */
         if ([
@@ -354,7 +340,7 @@ export default class CommandsHandler {
         ].includes(command)) {
             const updatingResult = await RolesHandler.updateUserRole(userFrom, userTo, command);
             let replyText;
-
+            
             if (!updatingResult.result) {
                 replyText = updatingResult.message;
             } else {
@@ -367,8 +353,8 @@ export default class CommandsHandler {
                         await this.bot.sendMessage(userToData.tgId, successToAnswer)
                     }
                 }
-                await this.bot.sendMessage(userFromData.tgId, replyText)
             }
+            await this.bot.sendMessage(userFromData.tgId, replyText)
             return;
         }
 
@@ -379,7 +365,7 @@ export default class CommandsHandler {
             Command.addTokens, 
             Command.takeTokens
         ].includes(command)) {
-            if (typeof params.tokens === 'undefined') {
+            if (typeof params?.tokens === 'undefined') {
                 await this.bot.sendMessage(userFromData.tgId, `Необходимо указать количество токенов.`);
                 return;
             }
@@ -419,7 +405,7 @@ export default class CommandsHandler {
      */
     private async validateCommandWithUsernameSearch(
         command: Command, 
-        username: string,
+        username?: string,
     ): Promise<UsernameValidationResult> {
         /**
          * Check if command is handable by this function

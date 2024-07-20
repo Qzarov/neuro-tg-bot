@@ -41,7 +41,6 @@ export default function parseStringCommand(command: string): CommandWithParams {
     if ([
         String(Command.start), 
         String(Command.requestAccess),
-        String(Command.userStats),
         String(Command.admin),
         String(Command.exitAdminMode),
         String(Command.state),

@@ -26,67 +26,82 @@ export default class RolesHandler {
      * 
      * @return Если требуемый параметр не предоставлен, возвращает `false`
      */
-    static hasAccess(from: User, command: Command, userTo?: User): HasAccessResult  {
-        // TODO delegate data checking?
+    static hasAccessToCommand(from: User, command: Command): HasAccessResult  {
         const fromUserData = from.getData()
         if (!fromUserData.role) {
-            console.log(`⛔️  RolesHandler.hasAccess() get user with undefined role (${fromUserData.tgId}, ${fromUserData.username})`)
+            console.error(`⛔️  RolesHandler.hasAccess() get user with undefined role (${fromUserData.tgId}, ${fromUserData.username})`)
             return {result: false, message: "userFrom has undefined role"};
         }
 
+        if ([
+            Command.start,
+            Command.requestAccess,
+            Command.user,
+        ].includes(command)) {
+            return { result: true, message: "success" } 
+        }
+
         /**
-         * Handle /admin
+         * Handle user's commands
+         */
+        if ([
+            Command.state,
+            Command.chooseNeuro,
+            Command.useGPT,
+            Command.useGemini,
+            Command.endUsingNeuro,
+        ].includes(command)) {
+            return this.checkUserAccess(fromUserData.role);
+        }
+
+        /**
+         * Handle admin's commands
          */
         if ([
             Command.admin,
+            Command.exitAdminMode,
+            Command.grantAccess,
+            Command.revokeAccess,
+            Command.addTokens,
+            Command.takeTokens,
         ].includes(command)) {
             return this.checkAdminAccess(fromUserData.role);
         }
 
         /**
-         * Block for commands that require params.userTo field.
-         * Check if userTo is not undefined & it's role is not undefined
-         */
-        const toUserData = userTo?.getData()
-        if (!toUserData?.role) {
-            console.log(`⛔️  RolesHandler.hasAccess() get undefined params.userTo.role:`, userTo)
-            return { result: false, message: "params.userTo has undefined role" };
-        }
-
-        /**
-         * Handle:
-         *  - /grantAccess
-         *  - /revokeAccess
-         */
-        if ([Command.grantAccess, Command.revokeAccess].includes(command)) {
-            return this.checkChangeBotAccess(fromUserData.role, toUserData.role)
-        }
-
-        /**
-         * Handle: 
-         * - /makeAdmin
-         * - /removeAdmin
-         * - /addTokens
-         * - /takeTokens
+         * Handle super's commands
          */
         if ([
-            Command.makeAdmin, 
+            Command.makeAdmin,
             Command.removeAdmin,
-            Command.addTokens, 
-            Command.takeTokens,
-        ].includes(command)) {
-            return this.checkChangeUser(fromUserData.role, toUserData.role)
+            Command.getApiTokens,
+            Command.addApiToken,
+            Command.deleteApiToken,
+        ]. includes(command)) {
+            return this.checkSuperAccess(fromUserData.role);
         }
-
-        // TODO add access checking /addTokens and /takeTokens
 
         return { result: false, message: "unknown command" }
     }
 
-    static checkAdminAccess(userRole: UserRole) {
+    private static checkUserAccess(userRole: UserRole) {
+        return userRole === UserRole.user 
+            || userRole === UserRole.admin 
+            || userRole === UserRole.super
+                ? { result: true, message: "success" } 
+                : { result: false, message: "У вас нет доступа к этой команде" }
+    }
+
+    private static checkAdminAccess(userRole: UserRole) {
         return userRole === UserRole.admin || userRole === UserRole.super
             ? { result: true, message: "success" } 
-            : { result: false, message: "Вы не обладаете правами администратора" }
+            : { result: false, message: "У вас нет доступа к этой команде" }
+    }
+
+    private static checkSuperAccess(userRole: UserRole) {
+        return userRole === UserRole.super
+            ? { result: true, message: "success" } 
+            : { result: false, message: "У вас нет доступа к этой команде" }
     }
 
     static checkChangeBotAccess(userFromRole: UserRole, userToRole: UserRole): HasAccessResult {
@@ -129,8 +144,8 @@ export default class RolesHandler {
         /**
          * Check access to change role 
          */
-        const access: HasAccessResult = RolesHandler.hasAccess(
-            userFrom, command, userTo
+        const access: HasAccessResult = RolesHandler.checkChangeUser(
+            await userFrom.getRole(), await userTo.getRole()
         )
         if (!access.result) {
             return {

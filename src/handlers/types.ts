@@ -3,7 +3,7 @@ import User from "../models/user";
 
 export enum Command {
     start = "/start",
-    user = "/user",
+    user = "/user", // TODO add handler
     admin = "/admin",
     requestAccess = "/requestAccess",
     grantAccess = "/grantAccess",
@@ -12,7 +12,6 @@ export enum Command {
     removeAdmin = "/removeAdmin",
     state = "/state",
     exitAdminMode = "/exitAdmin",
-    userStats = "/userStats", // TODO add handler
     addTokens = "/addTokens",
     takeTokens = "/takeTokens",
     getApiTokens = "/getApiTokens",

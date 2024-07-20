@@ -43,6 +43,10 @@ export default class ApiToken {
         // TODO implement
     }
 
+    getLastUsed(type: ApiTokenType): void {
+        // TODO implement
+    }
+
     async create(data: ApiTokenData): Promise<any> {
         await this._apiTokenService.create(data);
     }

@@ -144,7 +144,6 @@ export default class User {
     // TODO use _userService instead
     protected async getDbRecord() {
         const user = await this._userService.findById(this._userData.tgId);
-        console.log(`getDbRecord user`);
         return user
     }
 }
