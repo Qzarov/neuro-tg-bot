@@ -117,7 +117,7 @@ export default class User {
         return this._userData.state ?? UserState.start;
     }
 
-    async getRole(): Promise<UserRole> {
+    getRole(): UserRole {
         return this._userData.role ?? UserRole.guest;
     }
 

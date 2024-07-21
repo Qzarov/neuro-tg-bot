@@ -7,10 +7,13 @@ import { CallbackData, CommandParams, Command, UsernameValidationResult, HasAcce
 import RolesHandler from "./roles.handler";
 import parseStringCommand from "./command.parser";
 import ApiTokenService from "../services/apiTokens.service";
+import HistoryService, { HistoryRecordType } from "../services/history.service";
 import { ApiTokenData, ApiTokenType } from "../models/apiToken";
 
 export default class CommandsHandler {
-    constructor(private bot: TgBot) {} // TODO add UserService as injection
+    constructor(
+        private bot: TgBot,
+    ) {} 
 
     public async handleCommand(from: User, stringCommand: string) {
         try {
@@ -395,6 +398,16 @@ export default class CommandsHandler {
                                             .replace('tokensTotal', String(totalTokens))
                 await this.bot.sendMessage(userToData.tgId, replyToText)
             }
+
+            const historyService = new HistoryService();
+            historyService.create({
+                type: HistoryRecordType.TOKENS_CHANGED,
+                userId: userFrom.getTgId(),
+                data: {
+                    userToId: userToData.tgId,
+                    tokens: tokens,
+                },
+            });
 
             return;
         }

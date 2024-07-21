@@ -17,7 +17,7 @@ export default class ApiTokenService extends DbEntityService {
         if (typeof collections.apiTokens !== 'undefined') {
             super(collections.apiTokens);
         } else {
-            throw new Error(`⛔️  Cannot creater new api token: apiTokens collection is undefined`);
+            throw new Error(`⛔️  Cannot create new api token: apiTokens collection is undefined`);
         }
     }
 

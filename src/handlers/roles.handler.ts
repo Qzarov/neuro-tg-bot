@@ -1,4 +1,5 @@
 import User, { UserRole } from "../models/user";
+import HistoryService, { HistoryRecordType } from "../services/history.service";
 import { Command, HasAccessResult, Result } from "./types";
 
 /**
@@ -145,7 +146,7 @@ export default class RolesHandler {
          * Check access to change role 
          */
         const access: HasAccessResult = RolesHandler.checkChangeUser(
-            await userFrom.getRole(), await userTo.getRole()
+            userFrom.getRole(), userTo.getRole()
         )
         if (!access.result) {
             return {
@@ -184,6 +185,18 @@ export default class RolesHandler {
         const roleChanges: boolean = userToData.role !== userToNewRole
         if (roleChanges) {
             await userTo.update({ role: userToNewRole });
+
+            const historyService = new HistoryService();
+            historyService.create({
+                type: HistoryRecordType.ROLE_CHANGED,
+                userId: userFrom.getTgId(),
+                data: {
+                    userToId: userToData.tgId,
+                    userToOldRole: userTo.getRole(),
+                    userToNewRole: userToNewRole,
+                },
+            });
+
             return {
                 result: true,
                 message: `User's role changed`,
