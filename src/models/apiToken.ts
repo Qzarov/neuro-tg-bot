@@ -10,54 +10,59 @@ interface BaseAPiTokenData {
     _id?: ObjectId;
     token?: string;
     type?: ApiTokenType;
-    lastUsageTime?: number; // timestamp
+    lastUsageTimestamp?: number; // timestamp
     usages?: number; // number of usages
     isWorking?: boolean;
 }
 
 export type ApiTokenData = BaseAPiTokenData;
+export type UpdateApiTokenData = ApiTokenData;
 
 export default class ApiToken {
     protected _apiTokenService: ApiTokenService;
 
-    constructor(protected _apiTokenData: ApiTokenData) {
+    constructor(protected _apiTokenType: ApiTokenType) {
         this._apiTokenService = new ApiTokenService();
     }
 
-    getData(): ApiTokenData {
-        return this._apiTokenData;
+    async increaseUsages(token: string, currentUsages?: number): Promise<void> {
+        await this._apiTokenService.update(
+            { token: token },
+            { 
+                lastUsageTimestamp: (new Date()).getTime(),
+                usages: (currentUsages?? 0) + 1, 
+            }
+        );        
     }
 
-    async update(data: ApiTokenData): Promise<void> {
-        const res = await this._apiTokenService.update(
-            { _id: this._apiTokenData._id }, 
-            data
+    async setInvalid(token: string): Promise<void> {
+        await this._apiTokenService.update(
+            { token: token },
+            { isWorking: false }
         );
     }
 
-    async increaseUsages(): Promise<void> {
-        // TODO implement
-    }
+    async getLastUsed() {
+        const token = await this._apiTokenService.findMin(
+            { type: this._apiTokenType, }
+        )
 
-    async setInvalid(): Promise<void> {
-        // TODO implement
-    }
+        console.log('min token:', token)
 
-    getLastUsed(type: ApiTokenType): void {
-        // TODO implement
+        if (typeof token?.token === 'undefined') {
+            throw new Error(`Get undefined token`);
+        }
+        await this.increaseUsages(token.token, token.usages);
+        return token.token
     }
 
     async create(data: ApiTokenData): Promise<any> {
         await this._apiTokenService.create(data);
     }
 
-    async delete(): Promise<void> {
-        if (typeof this._apiTokenData._id === 'undefined') {
-            throw new Error('⛔️  ApiToken _id is undefined')
-        }
+    async delete(token: string): Promise<void> {
         await this._apiTokenService.delete({
-            _id: this._apiTokenData._id,
-            token: this._apiTokenData.type,
+            token: token,
         });
     }
 }

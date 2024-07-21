@@ -20,16 +20,8 @@ export default abstract class DbEntityService {
     }
 
     async findAll(where: any = {}): Promise<any[]> {
-        const query = this.collection.find(where);
-        if (where.getOne) {
-            return await query.limit(1).toArray();
-        } else {
-            return await query.toArray();
-        }
-    }
-
-    async findById(id: number): Promise<any> {
-        return await this.collection.findOne({ _id: new ObjectId(id) });
+        const result = this.collection.find(where);
+        return await result.toArray();
     }
 
     async create(entity: any): Promise<any> {

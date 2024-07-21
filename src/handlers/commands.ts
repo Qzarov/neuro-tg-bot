@@ -7,7 +7,7 @@ import { CallbackData, CommandParams, Command, UsernameValidationResult, HasAcce
 import RolesHandler from "./roles.handler";
 import parseStringCommand from "./command.parser";
 import ApiTokenService from "../services/apiTokens.service";
-import { ApiTokenType } from "../models/apiToken";
+import { ApiTokenData, ApiTokenType } from "../models/apiToken";
 
 export default class CommandsHandler {
     constructor(private bot: TgBot) {} // TODO add UserService as injection
@@ -340,7 +340,7 @@ export default class CommandsHandler {
         ].includes(command)) {
             const updatingResult = await RolesHandler.updateUserRole(userFrom, userTo, command);
             let replyText;
-            
+
             if (!updatingResult.result) {
                 replyText = updatingResult.message;
             } else {
@@ -471,11 +471,12 @@ export default class CommandsHandler {
         }
         
         if (command === Command.addApiToken) {
-            const token = {
-                type: params?.apiTokenType,
+            const token: ApiTokenData = {
+                type: params?.apiTokenType?.toLowerCase() as ApiTokenType,
                 token: params?.apiToken,
                 usages: 0,
                 isWorking: true,
+                lastUsageTimestamp: 0,
             }
             const res = await apiTokenService.create(token);
             await this.bot.sendMessage(from.getTgId(), `API токен добавлен: ${JSON.stringify(res)}`);

@@ -2,6 +2,7 @@ import config from "../config";
 import GPT, { GptResponse } from "../lib/gpt";
 import TextHandler from "../lib/text/text";
 import { Langs, Translation } from "../lib/text/types/lang";
+import ApiToken, { ApiTokenType } from "../models/apiToken";
 import { AvailableNeuros } from "./types";
 
 export default class NeuroManager {
@@ -20,7 +21,11 @@ export default class NeuroManager {
 
         switch(neuro) {
             case AvailableNeuros.GPT:
-                const gpt = new GPT(config.GPT_API_SECRET)
+                const provider = new ApiToken(ApiTokenType.GPT)
+                const token = await provider.getLastUsed();
+                console.log('last used token:', token)
+                
+                const gpt = new GPT(token)
                 const response: GptResponse = await gpt.request(request)
                 result =  this.messageFromGptResponse(response)
                 break;

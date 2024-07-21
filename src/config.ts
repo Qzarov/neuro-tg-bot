@@ -7,9 +7,6 @@ interface ENV {
   NODE_ENV?:   string;
   BOT_TOKEN?:  string;
 
-  // GPT
-  GPT_API_SECRET?: string;
-
   // Mongo DB
   MONGODB_CONNECTION?:     string;
   MONGODB_NAME?:           string;
