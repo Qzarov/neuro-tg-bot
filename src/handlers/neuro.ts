@@ -25,7 +25,7 @@ export default class NeuroManager {
                 const token = await provider.getLastUsed();
                 console.log('last used token:', token)
                 
-                const gpt = new GPT(token)
+                const gpt = new GPT(token, config.GPT_MODEL)
                 const response: GptResponse = await gpt.request(request)
                 result =  this.messageFromGptResponse(response)
                 break;

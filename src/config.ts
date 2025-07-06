@@ -11,8 +11,12 @@ interface ENV {
   MONGODB_CONNECTION?:     string;
   MONGODB_NAME?:           string;
   MONGO_COLLECTION_USERS?: string;
-  MONGO_COLLECTION_HISTORY?: string;
+  MONGO_COLLECTION_REQUESTS_HISTORY?: string;
+  MONGO_COLLECTION_MESSAGES_HISTORY?: string;
   MONGO_COLLECTION_API_TOKENS?: string;
+
+  // AI
+  GPT_MODEL?: string;
 }
 
 type Config = Required<ENV>
@@ -35,11 +39,18 @@ const getConfig = (): ENV => {
     MONGO_COLLECTION_USERS: process.env.MONGO_COLLECTION_USERS 
       ? String(process.env.MONGO_COLLECTION_USERS) 
       : undefined,
-    MONGO_COLLECTION_HISTORY: process.env.MONGO_COLLECTION_HISTORY 
-      ? String(process.env.MONGO_COLLECTION_HISTORY)
+    MONGO_COLLECTION_REQUESTS_HISTORY: process.env.MONGO_COLLECTION_REQUESTS_HISTORY 
+      ? String(process.env.MONGO_COLLECTION_REQUESTS_HISTORY)
       : undefined,
-    MONGO_COLLECTION_API_TOKENS: process.env.MONGO_COLLECTION_API_TOKENS 
+    MONGO_COLLECTION_MESSAGES_HISTORY: process.env.MONGO_COLLECTION_MESSAGES_HISTORY 
+      ? String(process.env.MONGO_COLLECTION_MESSAGES_HISTORY)
+      : undefined,
+      MONGO_COLLECTION_API_TOKENS: process.env.MONGO_COLLECTION_API_TOKENS 
       ? String(process.env.MONGO_COLLECTION_API_TOKENS)
+      : undefined,
+
+    GPT_MODEL: process.env.GPT_MODEL 
+      ? String(process.env.GPT_MODEL)
       : undefined,
   };
 };

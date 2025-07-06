@@ -5,10 +5,9 @@ import config from "../config";
 export const collections: { 
     users?: mongoDB.Collection,
     history?: mongoDB.Collection,
+    messages?: mongoDB.Collection,
     apiTokens?: mongoDB.Collection,
 } = {};
-
-// export let collections: Required<Collections>;
 
 // Initialize Connection
 export async function connectToMongo() {
@@ -18,11 +17,13 @@ export async function connectToMongo() {
             
         const db: mongoDB.Db = client.db(config.MONGODB_NAME);
         const usersCollection: mongoDB.Collection = db.collection(config.MONGO_COLLECTION_USERS);
-        const historyCollection: mongoDB.Collection = db.collection(config.MONGO_COLLECTION_HISTORY);
+        const historyCollection: mongoDB.Collection = db.collection(config.MONGO_COLLECTION_REQUESTS_HISTORY);
+        const messagesCollection: mongoDB.Collection = db.collection(config.MONGO_COLLECTION_MESSAGES_HISTORY);
         const apiTokensCollection: mongoDB.Collection = db.collection(config.MONGO_COLLECTION_API_TOKENS);
         
         collections.users = usersCollection;
         collections.history = historyCollection;
+        collections.messages = messagesCollection;
         collections.apiTokens = apiTokensCollection;
 
         apiTokensCollection.createIndex({ "token": 1 }, { unique: true });

@@ -36,7 +36,10 @@ export default class EventsHandler {
         await user.isInDatabase(); 
 
         if (typeof text !== "string") {
-            throw error(`⛔️  Error! Type of message's text is ${typeof text}:`, text)
+            console.log(message)
+            console.error(`⛔️  Error! Type of message's text is ${typeof text}:`, text)
+            console.error(`return`)
+            return;
         }
 
         if (text === Command.requestAccess) {
