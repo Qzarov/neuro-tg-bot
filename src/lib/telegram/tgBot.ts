@@ -1,7 +1,6 @@
 import TelegramBot, { InlineKeyboardMarkup, ReplyKeyboardMarkup } from "node-telegram-bot-api";
 
-export default
-class TgBot {
+export default class TgBot {
     public bot: TelegramBot 
     constructor(bot_token: string) {
         const token: string = bot_token;

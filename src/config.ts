@@ -13,6 +13,7 @@ interface ENV {
   MONGO_COLLECTION_USERS?: string;
   MONGO_COLLECTION_REQUESTS_HISTORY?: string;
   MONGO_COLLECTION_MESSAGES_HISTORY?: string;
+  MONGO_COLLECTION_CHATS_FOR_SCAN?: string;
   MONGO_COLLECTION_API_TOKENS?: string;
 
   // AI
@@ -45,10 +46,14 @@ const getConfig = (): ENV => {
     MONGO_COLLECTION_MESSAGES_HISTORY: process.env.MONGO_COLLECTION_MESSAGES_HISTORY 
       ? String(process.env.MONGO_COLLECTION_MESSAGES_HISTORY)
       : undefined,
-      MONGO_COLLECTION_API_TOKENS: process.env.MONGO_COLLECTION_API_TOKENS 
+    MONGO_COLLECTION_CHATS_FOR_SCAN: process.env.MONGO_COLLECTION_CHATS_FOR_SCAN 
+      ? String(process.env.MONGO_COLLECTION_CHATS_FOR_SCAN)
+      : undefined,
+    MONGO_COLLECTION_API_TOKENS: process.env.MONGO_COLLECTION_API_TOKENS 
       ? String(process.env.MONGO_COLLECTION_API_TOKENS)
       : undefined,
-
+    
+      // AI
     GPT_MODEL: process.env.GPT_MODEL 
       ? String(process.env.GPT_MODEL)
       : undefined,

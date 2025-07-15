@@ -9,6 +9,7 @@ import User, { UserRole, UserState } from "../models/user";
 import TextHandler from "../lib/text/text";
 import { Langs } from '../lib/text/types/lang';
 import { AvailableNeuros, CallbackData, Command } from "./types";
+import { isGroupMessage } from "../lib/telegram";
 
 export default class EventsHandler {
     private commandsHandler: CommandsHandler
@@ -41,6 +42,19 @@ export default class EventsHandler {
             console.error(`return`)
             return;
         }
+
+        // Check if message come from group or private chat
+        if (isGroupMessage(message)) {
+            // message from group
+            
+            // classify message
+            // save to db
+        } else {
+            // message from private chat
+
+            // handle commands
+        }
+
 
         if (text === Command.requestAccess) {
             await this.commandsHandler.handleCommand(user, text);

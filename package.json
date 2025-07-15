@@ -12,6 +12,9 @@
         "querystring": "^0.2.1",
         "telegram-typings": "^5.0.0"
     },
+    "scripts": {
+        "start": "tsc & node dist/runNeuroBot.js"
+    },
     "devDependencies": {
         "@types/node": "^20.11.30",
         "@types/node-telegram-bot-api": "^0.61.11",
