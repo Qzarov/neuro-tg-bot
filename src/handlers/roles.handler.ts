@@ -1,4 +1,4 @@
-import User, { UserRole } from "../models/user";
+import User, { UserRole } from "../models/user.entity";
 import HistoryService, { HistoryRecordType } from "../services/history.service";
 import { Command, HasAccessResult, Result } from "./types";
 

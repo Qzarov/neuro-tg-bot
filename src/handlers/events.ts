@@ -5,7 +5,7 @@ import CommandsHandler from "./commands";
 import TgBot from "../lib/telegram/tgBot";
 import NeuroManager from "./neuro";
 import { replyKeyboardButtons } from "../lib/telegram/const/buttons";
-import User, { UserRole, UserState } from "../models/user";
+import User, { UserRole, UserState } from "../models/user.entity";
 import TextHandler from "../lib/text/text";
 import { Langs } from '../lib/text/types/lang';
 import { AvailableNeuros, CallbackData, Command } from "./types";

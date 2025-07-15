@@ -1,7 +1,7 @@
 import { ObjectId } from "mongodb";
 import DbEntityService from "./db.entity.service";
 import { collections } from "./mongo.service";
-import { UserRole } from "../models/user";
+import { UserRole } from "../models/user.entity";
 import { AvailableNeuros } from "../handlers/types";
 
 export type HistoryRecord = {

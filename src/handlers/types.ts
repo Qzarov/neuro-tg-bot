@@ -1,5 +1,5 @@
 import { ApiTokenType } from "../models/apiToken";
-import User from "../models/user";
+import User from "../models/user.entity";
 
 export enum Command {
     start = "/start",

@@ -1,7 +1,7 @@
 import { InlineKeyboardMarkup, ReplyKeyboardMarkup } from "node-telegram-bot-api";
 import { replyKeyboardButtons } from "../lib/telegram/const/buttons";
 import TgBot from "../lib/telegram/tgBot";
-import User, { UserRole, UserState } from "../models/user";
+import User, { UserRole, UserState } from "../models/user.entity";
 import { collections, UserService } from "../services/index";
 import { CallbackData, CommandParams, Command, UsernameValidationResult, HasAccessResult } from "./types";
 import RolesHandler from "./roles.handler";

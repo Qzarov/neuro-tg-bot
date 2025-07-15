@@ -1,4 +1,4 @@
-import User, { UserData, UserRole, UserState } from "../models/user";
+import { UserData, UserRole, UserState } from "../models/user.entity";
 import DbEntityService from "./db.entity.service";
 import { collections } from "./mongo.service";
 
@@ -17,7 +17,7 @@ export default class UserService extends DbEntityService {
         if (typeof collections.users !== 'undefined') {
             super(collections.users);
         } else {
-            throw new Error(`⛔️  Cannot creater new user: Users collection is undefined`);
+            throw new Error(`⛔️  Cannot creater new user record: Users collection is undefined`);
         }
     }
 

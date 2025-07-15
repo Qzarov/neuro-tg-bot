@@ -1,4 +1,4 @@
-import TelegramBot, { InlineKeyboardMarkup, Message } from "node-telegram-bot-api";
+import { Message } from "node-telegram-bot-api";
 
 import TgBot from "./lib/telegram/tgBot";
 import EventsHandler from "./handlers/events";
