@@ -32,12 +32,7 @@ export async function connectToMongo() {
         apiTokensCollection.createIndex({ "token": 1 }, { unique: true });
            
         console.log(
-            `🔌  Successfully connected to database: ${db.databaseName} and collections:`,
-            usersCollection.collectionName,
-            historyCollection.collectionName,
-            messagesCollection.collectionName,
-            scannedChatsCollection.collectionName,
-            apiTokensCollection.collectionName,
+            `🔌  Successfully connected to database: ${db.databaseName}. Includes:\n\t- ${usersCollection.collectionName}\n\t- ${historyCollection.collectionName},\n\t- ${messagesCollection.collectionName},\n\t- ${scannedChatsCollection.collectionName},\n\t- ${apiTokensCollection.collectionName},`
         );
     } catch(error) {
         console.error("❌  Database connection failed", error);

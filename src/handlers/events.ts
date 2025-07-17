@@ -10,6 +10,7 @@ import TextHandler from "../lib/text/text";
 import { Langs } from '../lib/text/types/lang';
 import { AvailableNeuros, CallbackData, Command } from "./types";
 import { isGroupMessage } from "../lib/telegram";
+import MessageEntity, { MessageData, MessageType } from "../message/message.entity";
 
 export default class EventsHandler {
     private commandsHandler: CommandsHandler
@@ -43,12 +44,25 @@ export default class EventsHandler {
             return;
         }
 
+        console.log("message:", message)
         // Check if message come from group or private chat
         if (isGroupMessage(message)) {
             // message from group
             
+            const messageEntity = new MessageEntity({
+                chatId: message.chat.id,
+                fromGroup: true,
+                tgIdFrom: userId,
+                text,
+                summary: "",
+                important: false,
+                type: MessageType.unknown
+            })
+
             // classify message
             // save to db
+            await messageEntity.save()
+
         } else {
             // message from private chat
 
