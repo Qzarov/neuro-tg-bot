@@ -13,11 +13,13 @@
         "telegram-typings": "^5.0.0"
     },
     "scripts": {
-        "start": "tsc & node dist/runNeuroBot.js"
+        "build": "tsc && tsc-alias",
+        "start": "npm run build && node dist/runNeuroBot.js"
     },
     "devDependencies": {
         "@types/node": "^20.11.30",
         "@types/node-telegram-bot-api": "^0.61.11",
-        "ts-node": "^10.9.2"
+        "ts-node": "^10.9.2",
+        "tsc-alias": "^1.8.16"
     }
 }

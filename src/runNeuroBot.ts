@@ -1,9 +1,9 @@
 import { Message } from "node-telegram-bot-api";
 
-import TgBot from "./lib/telegram/tgBot";
-import EventsHandler from "./handlers/events";
-import config from "./config"
-import { connectToMongo } from "./services/mongo.service";
+import TgBot from "./infrastructure/telegram/tgBot";
+import EventsHandler from "./infrastructure/telegram/events";
+import config from "./shared/config"
+import { connectToMongo } from "./shared/infrastructure/mongo.service";
 
 (async () => {
     await connectToMongo();

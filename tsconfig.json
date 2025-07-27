@@ -3,6 +3,14 @@
       "target": "ES2020",                                  /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */
       "module": "commonjs",                                /* Specify what module code is generated. */
       "moduleResolution": "node",                       /* Specify how TypeScript looks up a file from a given module specifier. */
+      "paths": {
+        "@infrastructure/*": ["./src/infrastructure/*"],
+        "@shared/*": ["./src/shared/*"],
+        "@message/*": ["./src/messages/*"],
+        "@users/*": ["./src/users/*"],
+        "@request-history/*": ["./src/request-history/*"],
+        "@api-tokens/*": ["./src/api-tokens/*"],
+      },
       "typeRoots": [
         "./typings",
         "./node_modules/@types/"
