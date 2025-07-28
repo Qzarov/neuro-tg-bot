@@ -1,0 +1,10 @@
+export enum QuestionTypes {
+  ARBITRAGE,
+  ONCHAIN,
+  AI_ASSISTANT,
+  API_ARBITRAGE,
+  API_ONCHAIN,
+  API_NODE,
+  API_AI_ASSISTANT,
+  NO_CODE,
+}

@@ -1,8 +1,4 @@
-import { Collection, ObjectId } from "mongodb";
-
-// export interface IBaseDbRepository {
-//     get()
-// }
+import { Collection } from "mongodb";
 
 export interface MongoGetParams {
     collection: string;
@@ -12,7 +8,7 @@ export interface MongoGetParams {
     limit?: number;
 }
 
-export default abstract class BaseEntity {    
+export abstract class BaseDbRepository {    
     protected collection: Collection;
 
     constructor(collection: Collection) {

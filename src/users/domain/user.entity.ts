@@ -1,13 +1,13 @@
 
-import { collections } from "@shared/index";
-import { UserService } from "../infrastructure";
+import { collections } from "@shared/infrastructure";
+import { UserRepository } from "../infrastructure";
 import { UpdateUserData, UserData, UserRole, UserState } from "./types";
 
 export class User {
-    protected _userService: UserService;
+    protected _userRepository: UserRepository;
 
     constructor(protected _userData: UserData) {
-        this._userService = new UserService();
+        this._userRepository = new UserRepository();
     }
 
     getTgId(): number { 
@@ -38,7 +38,7 @@ export class User {
             this._userData.tokensAvailable = 0;
             this._userData.tokensUsed = 0;
 
-            await this._userService.create(this._userData)
+            await this._userRepository.create(this._userData)
         } else {
             this._userData = user;
         }
@@ -98,9 +98,9 @@ export class User {
         return userData
     }
 
-    // TODO use _userService instead
+    // TODO use _userRepository instead
     protected async getDbRecord() {
-        const user = await this._userService.findById(this._userData.tgId);
+        const user = await this._userRepository.findById(this._userData.tgId);
         return user
     }
 }

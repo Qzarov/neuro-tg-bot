@@ -7,7 +7,7 @@ import { HasAccessResult, UsernameValidationResult } from "../guards";
 import { CallbackData, Command, CommandParams } from "./types";
 import { collections } from "@shared/index";
 import { User, UserRole, UserState } from "@users/domain";
-import { UserService } from "@users/infrastructure";
+import { UserRepository } from "@users/infrastructure";
 import { ApiTokenService } from "@api-tokens/infrastructure";
 import { ApiTokenData, ApiTokenType } from "@api-tokens/domain";
 import { HistoryRecordType, HistoryService } from "@request-history/infrastructure";
@@ -179,8 +179,8 @@ export default class CommandsHandler {
 
         // Get all admins from DB
         if (collections.users) {
-            const userService = new UserService();
-            const adminsData = await userService.findAll({role: UserRole.admin});
+            const userRepository = new UserRepository();
+            const adminsData = await userRepository.findAll({role: UserRole.admin});
             
             const username = from.getData().username;
             const userId = from.getData().tgId;
@@ -449,8 +449,8 @@ export default class CommandsHandler {
             }
         }
 
-        const userService = new UserService()
-        const usersData = await userService.findByUsername(username);
+        const userRepository = new UserRepository()
+        const usersData = await userRepository.findByUsername(username);
 
         /**
          * Check if user for given data is unique

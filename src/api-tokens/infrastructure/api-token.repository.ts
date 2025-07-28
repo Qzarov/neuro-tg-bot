@@ -1,10 +1,10 @@
-import { BaseEntity } from "@shared/index";
-import { collections } from "@shared/index";
+import { collections } from "@shared/infrastructure";
 import { WhereApiToken } from "./types";
 import { ApiTokenData, UpdateApiTokenData } from "@api-tokens/domain";
+import { BaseDbRepository } from "@shared/domain";
 
 
-export class ApiTokenService extends BaseEntity {
+export class ApiTokenService extends BaseDbRepository {
 
     constructor() {
         if (typeof collections.apiTokens !== 'undefined') {

@@ -8,6 +8,7 @@ export const collections: {
     messages?: mongoDB.Collection,
     scannedChats?: mongoDB.Collection,
     apiTokens?: mongoDB.Collection,
+    knowledges?: mongoDB.Collection,
 } = {};
 
 // Initialize Connection
@@ -22,17 +23,19 @@ export async function connectToMongo() {
         const messagesCollection: mongoDB.Collection = db.collection(config.MONGO_COLLECTION_MESSAGES_HISTORY);
         const scannedChatsCollection: mongoDB.Collection = db.collection(config.MONGO_COLLECTION_CHATS_FOR_SCAN);
         const apiTokensCollection: mongoDB.Collection = db.collection(config.MONGO_COLLECTION_API_TOKENS);
+        const knowledgeCollection: mongoDB.Collection = db.collection(config.MONGO_COLLECTION_KNOWLEDGE);
         
         collections.users = usersCollection;
         collections.history = historyCollection;
         collections.messages = messagesCollection;
         collections.scannedChats = scannedChatsCollection;
         collections.apiTokens = apiTokensCollection;
+        collections.knowledges = knowledgeCollection;
 
         apiTokensCollection.createIndex({ "token": 1 }, { unique: true });
            
         console.log(
-            `🔌  Successfully connected to database: ${db.databaseName}. Includes:\n\t- ${usersCollection.collectionName}\n\t- ${historyCollection.collectionName},\n\t- ${messagesCollection.collectionName},\n\t- ${scannedChatsCollection.collectionName},\n\t- ${apiTokensCollection.collectionName},`
+            `🔌  Successfully connected to database: ${db.databaseName}. Includes:\n\t- ${usersCollection.collectionName}\n\t- ${historyCollection.collectionName},\n\t- ${messagesCollection.collectionName},\n\t- ${scannedChatsCollection.collectionName},\n\t- ${apiTokensCollection.collectionName},\n\t- ${knowledgeCollection.collectionName},`
         );
     } catch(error) {
         console.error("❌  Database connection failed", error);

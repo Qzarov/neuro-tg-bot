@@ -1,10 +1,10 @@
-import BaseDbRepository from "../../shared/domain/base.entity";
-import { collections } from "../../shared/infrastructure/mongo.service";
+import { BaseDbRepository } from "@shared/domain";
+import { collections } from "@shared/infrastructure";
 import { UserData } from "../domain";
 import { WhereUser } from "./types";
 
 
-export class UserService extends BaseDbRepository {
+export class UserRepository extends BaseDbRepository {
 
     constructor() {
         if (typeof collections.users !== 'undefined') {
